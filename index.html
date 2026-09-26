@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EventPulse - Online Reservation & Bulletin System</title>
+    <title>EventPulse - Real-time Bulletin & Slot Reservations</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
@@ -54,11 +54,17 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+        .toast-enter {
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
 
-    <!-- Header Navigation -->
     <header class="sticky top-0 z-30 bg-slate-900 text-white shadow-lg border-b border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             
@@ -69,12 +75,18 @@
                 </div>
                 <div>
                     <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-blue-200 bg-clip-text text-transparent">EventPulse</span>
-                    <span class="text-[11px] block text-slate-400 font-medium">Bulletin & Slot Reservations</span>
+                    <span class="text-[11px] block text-slate-400 font-medium">Real-Time Cloud Reservation Hub</span>
                 </div>
             </div>
 
-            <!-- Role Switcher & Admin Actions -->
+            <!-- Role Switcher & Real-time Status -->
             <div class="flex items-center space-x-3 sm:space-x-4">
+                <!-- Cloud Real-time Badge -->
+                <div id="sync-status-badge" class="hidden sm:flex items-center gap-1.5 bg-blue-500/10 text-blue-300 border border-blue-500/30 px-2.5 py-1 rounded-xl text-xs font-semibold">
+                    <span id="sync-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                    <span id="sync-text">Connecting...</span>
+                </div>
+
                 <div id="admin-session-badge" class="hidden items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1 rounded-xl text-xs font-semibold">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>Admin Mode Active</span>
@@ -103,19 +115,18 @@
         </div>
     </header>
 
-    <!-- Hero Banner & System Stats -->
     <section class="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 text-white pb-10 pt-8 px-4 sm:px-6 lg:px-8 border-b border-slate-700/50">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div class="space-y-2">
                 <div class="inline-flex items-center space-x-2 bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-semibold px-3 py-1 rounded-full">
                     <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
-                    <span>Live Multi-Slot Reservation System</span>
+                    <span>Multi-Device Live Sync Enabled</span>
                 </div>
                 <h1 id="page-title" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Upcoming Event Bulletins</h1>
-                <p id="page-subtitle" class="text-slate-400 text-sm sm:text-base max-w-2xl">Browse upcoming events, view real-time slot availability, and reserve your spots instantly.</p>
+                <p id="page-subtitle" class="text-slate-400 text-sm sm:text-base max-w-2xl">Browse upcoming events, view real-time seat availability, and reserve your spots instantly with live cross-device updates.</p>
             </div>
 
             <!-- Stats Widgets -->
@@ -136,10 +147,9 @@
         </div>
     </section>
 
-    <!-- Main Content Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-        <!-- Admin Quick Controls Header (Visible only to logged in Admin) -->
+        <!-- Admin Quick Controls Header -->
         <section id="admin-analytics-section" class="hidden">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-indigo-950/20 border border-indigo-200/60 p-5 rounded-2xl shadow-sm">
                 <div>
@@ -147,7 +157,7 @@
                         <i class="fa-solid fa-sliders text-indigo-600"></i>
                         Admin Controls & Quick Tools
                     </h2>
-                    <p class="text-slate-500 text-xs mt-0.5">Manage event bulletins, export attendee lists, change password, or reset demo data.</p>
+                    <p class="text-slate-500 text-xs mt-0.5">Manage event bulletins, export attendee lists, change password, or reset demo database.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <button onclick="openChangePasswordModal()" class="text-xs font-semibold text-indigo-700 hover:text-indigo-800 border border-indigo-200 hover:border-indigo-300 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
@@ -158,9 +168,9 @@
                         <i class="fa-solid fa-arrow-down-short-wide text-[10px]"></i>
                         <span>Sort Chronologically</span>
                     </button>
-                    <button onclick="resetDataToDefaults()" class="text-xs font-semibold text-rose-600 hover:text-rose-700 border border-slate-200 hover:border-rose-200 bg-white hover:bg-rose-50 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
+                    <button onclick="promptResetDataToDefaults()" class="text-xs font-semibold text-rose-600 hover:text-rose-700 border border-slate-200 hover:border-rose-200 bg-white hover:bg-rose-50 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
                         <i class="fa-solid fa-rotate-right text-[10px]"></i>
-                        <span>Reset Demo Data</span>
+                        <span>Reset Cloud Demo Data</span>
                     </button>
                 </div>
             </div>
@@ -179,7 +189,6 @@
             </div>
         </div>
 
-        <!-- Bulletin Grid -->
         <section>
             <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             
@@ -197,11 +206,29 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 mt-auto py-6">
         <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
-            EventPulse Bulletin & Reservation Hub &bull; Hosted on GitHub Pages
+            EventPulse Bulletin & Real-Time Reservation Hub &bull; Powered by Cloud Firestore
         </div>
     </footer>
 
-    <!-- ================= MODALS ================= -->
+    <!-- Floating Toast Container -->
+    <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+    <!-- Generic Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-slate-100 p-6 space-y-4">
+            <div class="flex items-center space-x-3 text-amber-500">
+                <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                </div>
+                <h3 id="confirm-title" class="font-bold text-slate-900 text-base">Confirm Action</h3>
+            </div>
+            <p id="confirm-message" class="text-xs text-slate-600 leading-relaxed">Are you sure you want to proceed?</p>
+            <div class="flex space-x-2 pt-2">
+                <button id="confirm-btn-cancel" class="w-1/2 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold text-xs hover:bg-slate-100 transition">Cancel</button>
+                <button id="confirm-btn-ok" class="w-1/2 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-md transition">Confirm</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Guest Reservation Modal -->
     <div id="reservation-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -273,7 +300,7 @@
         </div>
     </div>
 
-    <!-- Enhanced Admin Authentication Modal -->
+    <!-- Admin Authentication Modal -->
     <div id="admin-login-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-slate-100">
             <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center">
@@ -516,19 +543,22 @@
         </div>
     </div>
 
-    <!-- Application Script -->
-    <script>
-        // State Management
-        let isAdminLoggedIn = false;
-        let failedLoginAttempts = 0;
-        let lockoutUntil = 0;
-        let activeCategoryFilter = 'all';
-        let currentEditingAttendeeEventId = null;
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Default SHA-256 hash for 'admin123'
+        // Global State & Firebase Initialization
+        window.isAdminLoggedIn = false;
+        window.failedLoginAttempts = 0;
+        window.lockoutUntil = 0;
+        window.activeCategoryFilter = 'all';
+        window.currentEditingAttendeeEventId = null;
+        window.eventsData = [];
+
         const DEFAULT_PASS_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
 
-        // Initial Sample Data
+        // Default Data Seed
         const DEFAULT_EVENTS = [
             {
                 id: 'evt-101',
@@ -580,35 +610,152 @@
             }
         ];
 
-        let eventsData = [];
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'eventpulse-hub-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined'
+            ? JSON.parse(__firebase_config)
+            : {
+                apiKey: "demo-key",
+                authDomain: "demo.firebaseapp.com",
+                projectId: "demo-project",
+                storageBucket: "demo.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:demo"
+            };
 
-        // Application Initialization
-        document.addEventListener('DOMContentLoaded', () => {
-            loadStoredData();
-            checkAdminSession();
-            renderEvents();
-            updateHeaderStats();
-        });
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        // Load LocalStorage Data
-        function loadStoredData() {
+        let currentUser = null;
+        const eventsCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'events');
+
+        // Toast & Notification Utilities
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            let iconClass = 'fa-circle-info text-blue-500';
+            let bgClass = 'bg-white border-slate-200 text-slate-800';
+
+            if (type === 'success') {
+                iconClass = 'fa-circle-check text-emerald-500';
+            } else if (type === 'error') {
+                iconClass = 'fa-circle-exclamation text-rose-500';
+            } else if (type === 'warning') {
+                iconClass = 'fa-triangle-exclamation text-amber-500';
+            }
+
+            toast.className = `toast-enter pointer-events-auto flex items-center space-x-3 p-3.5 rounded-2xl border shadow-xl ${bgClass} text-xs font-semibold max-w-xs`;
+            toast.innerHTML = `
+                <i class="fa-solid ${iconClass} text-base shrink-0"></i>
+                <span class="flex-grow">${message}</span>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        };
+
+        // Custom Confirmation Dialog replacing window.confirm
+        window.showConfirmModal = function(title, message, onConfirm) {
+            const modal = document.getElementById('confirm-modal');
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+
+            const btnOk = document.getElementById('confirm-btn-ok');
+            const btnCancel = document.getElementById('confirm-btn-cancel');
+
+            const cleanup = () => {
+                modal.classList.add('hidden');
+                btnOk.onclick = null;
+                btnCancel.onclick = null;
+            };
+
+            btnOk.onclick = () => {
+                cleanup();
+                onConfirm();
+            };
+            btnCancel.onclick = () => cleanup();
+
+            modal.classList.remove('hidden');
+        };
+
+        async function initAuthAndFirestore() {
             try {
-                const storedEvents = localStorage.getItem('eventpulse_events');
-                if (storedEvents) {
-                    eventsData = JSON.parse(storedEvents);
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const userCred = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = userCred.user;
                 } else {
-                    eventsData = DEFAULT_EVENTS;
-                    saveEventsToStorage();
+                    const userCred = await signInAnonymously(auth);
+                    currentUser = userCred.user;
                 }
-            } catch (e) {
-                console.error("Failed to parse local storage, falling back to defaults.", e);
-                eventsData = DEFAULT_EVENTS;
+            } catch (err) {
+                console.warn("Auth initialization fallback:", err);
+                try {
+                    const userCred = await signInAnonymously(auth);
+                    currentUser = userCred.user;
+                } catch(e) {
+                    console.error("Anonymous auth failed:", e);
+                }
+            }
+
+            if (currentUser) {
+                setupRealtimeSync();
             }
         }
 
-        function saveEventsToStorage() {
-            localStorage.setItem('eventpulse_events', JSON.stringify(eventsData));
-            updateHeaderStats();
+        function setupRealtimeSync() {
+            if (!currentUser) return;
+
+            const syncDot = document.getElementById('sync-dot');
+            const syncText = document.getElementById('sync-text');
+
+            onSnapshot(eventsCollectionRef, async (snapshot) => {
+                if (syncDot && syncText) {
+                    syncDot.className = "w-2 h-2 rounded-full bg-emerald-400";
+                    syncText.innerText = "Synced with Cloud";
+                }
+
+                if (snapshot.empty) {
+                    await seedDefaultEvents();
+                    return;
+                }
+
+                window.eventsData = snapshot.docs.map(docSnap => ({
+                    id: docSnap.id,
+                    ...docSnap.data()
+                }));
+
+                renderEvents();
+                updateHeaderStats();
+
+                if (window.currentEditingAttendeeEventId) {
+                    openAttendeesModal(window.currentEditingAttendeeEventId);
+                }
+            }, (error) => {
+                console.error("Firestore sync error:", error);
+                if (syncDot && syncText) {
+                    syncDot.className = "w-2 h-2 rounded-full bg-rose-500";
+                    syncText.innerText = "Sync Error";
+                }
+                showToast("Failed to connect to cloud database.", "error");
+            });
+        }
+
+        async function seedDefaultEvents() {
+            if (!currentUser) return;
+            try {
+                for (const evt of DEFAULT_EVENTS) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', evt.id);
+                    await setDoc(docRef, evt);
+                }
+            } catch (err) {
+                console.error("Failed to seed default events:", err);
+            }
         }
 
         // Crypto helper for password hashing (SHA-256)
@@ -620,187 +767,18 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // Security & Admin Session Management
-        function checkAdminSession() {
-            const sessionActive = sessionStorage.getItem('eventpulse_admin_active');
-            if (sessionActive === 'true') {
-                isAdminLoggedIn = true;
-                applyAdminUI(true);
-            } else {
-                isAdminLoggedIn = false;
-                applyAdminUI(false);
-            }
-        }
-
-        function applyAdminUI(active) {
-            const badge = document.getElementById('admin-session-badge');
-            const navCreateBtn = document.getElementById('btn-create-event-nav');
-            const logoutBtn = document.getElementById('btn-admin-logout');
-            const adminSection = document.getElementById('admin-analytics-section');
-            const btnGuest = document.getElementById('btn-guest-mode');
-            const btnAdmin = document.getElementById('btn-admin-mode');
-
-            if (active) {
-                badge.classList.remove('hidden');
-                badge.classList.add('flex');
-                navCreateBtn.classList.remove('hidden');
-                logoutBtn.classList.remove('hidden');
-                adminSection.classList.remove('hidden');
-
-                btnGuest.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 text-slate-400 hover:text-white";
-                btnAdmin.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 bg-indigo-600 text-white shadow";
-            } else {
-                badge.classList.add('hidden');
-                badge.classList.remove('flex');
-                navCreateBtn.classList.add('hidden');
-                logoutBtn.classList.add('hidden');
-                adminSection.classList.add('hidden');
-
-                btnGuest.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 bg-blue-600 text-white shadow";
-                btnAdmin.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 text-slate-400 hover:text-white";
-            }
-            renderEvents();
-        }
-
-        function switchToGuestMode() {
-            applyAdminUI(false);
-        }
-
-        function attemptAdminAccess() {
-            if (isAdminLoggedIn) {
-                applyAdminUI(true);
-            } else {
-                openAdminLoginModal();
-            }
-        }
-
-        function openAdminLoginModal() {
-            document.getElementById('admin-login-error').classList.add('hidden');
-            document.getElementById('lockout-timer-msg').classList.add('hidden');
-            document.getElementById('admin-password-input').value = '';
-            document.getElementById('admin-login-modal').classList.remove('hidden');
-        }
-
-        function closeAdminLoginModal() {
-            document.getElementById('admin-login-modal').classList.add('hidden');
-        }
-
-        async function handleAdminLoginSubmit(e) {
-            e.preventDefault();
-            const now = Date.now();
-            
-            if (now < lockoutUntil) {
-                const remaining = Math.ceil((lockoutUntil - now) / 1000);
-                showLockoutError(`Rate limit reached. Please wait ${remaining}s.`);
-                return;
-            }
-
-            const inputPass = document.getElementById('admin-password-input').value;
-            const inputHash = await hashPassword(inputPass);
-            const storedHash = localStorage.getItem('eventpulse_admin_hash') || DEFAULT_PASS_HASH;
-
-            if (inputHash === storedHash || inputPass === 'admin123') {
-                isAdminLoggedIn = true;
-                failedLoginAttempts = 0;
-                sessionStorage.setItem('eventpulse_admin_active', 'true');
-                closeAdminLoginModal();
-                applyAdminUI(true);
-            } else {
-                failedLoginAttempts++;
-                if (failedLoginAttempts >= 3) {
-                    lockoutUntil = Date.now() + 30000; // 30s lockout
-                    showLockoutError("Too many failed attempts. Locked out for 30 seconds.");
-                } else {
-                    const errEl = document.getElementById('admin-login-error');
-                    document.getElementById('admin-error-text').innerText = `Incorrect password. (${3 - failedLoginAttempts} attempts left)`;
-                    errEl.classList.remove('hidden');
-                }
-            }
-        }
-
-        function showLockoutError(msg) {
-            const lockoutEl = document.getElementById('lockout-timer-msg');
-            document.getElementById('lockout-text').innerText = msg;
-            lockoutEl.classList.remove('hidden');
-            document.getElementById('admin-login-error').classList.add('hidden');
-        }
-
-        function logoutAdmin() {
-            isAdminLoggedIn = false;
-            sessionStorage.removeItem('eventpulse_admin_active');
-            applyAdminUI(false);
-        }
-
-        function togglePasswordVisibility(inputId, iconId) {
-            const input = document.getElementById(inputId);
-            const icon = document.getElementById(iconId);
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.className = 'fa-solid fa-eye-slash';
-            } else {
-                input.type = 'password';
-                icon.className = 'fa-solid fa-eye';
-            }
-        }
-
-        // Change Password Modal Controls
-        function openChangePasswordModal() {
-            document.getElementById('new-pass-input').value = '';
-            document.getElementById('confirm-pass-input').value = '';
-            document.getElementById('change-pass-error').classList.add('hidden');
-            document.getElementById('admin-change-pass-modal').classList.remove('hidden');
-        }
-
-        function closeChangePasswordModal() {
-            document.getElementById('admin-change-pass-modal').classList.add('hidden');
-        }
-
-        async function handleChangePasswordSubmit(e) {
-            e.preventDefault();
-            const p1 = document.getElementById('new-pass-input').value;
-            const p2 = document.getElementById('confirm-pass-input').value;
-            if (p1 !== p2) {
-                document.getElementById('change-pass-error').classList.remove('hidden');
-                return;
-            }
-            const newHash = await hashPassword(p1);
-            localStorage.setItem('eventpulse_admin_hash', newHash);
-            closeChangePasswordModal();
-            alert("Admin password updated successfully!");
-        }
-
-        // Stats Calculation
-        function updateHeaderStats() {
-            let totalEvents = eventsData.length;
-            let totalSlots = 0;
-            let totalBookings = 0;
-
-            eventsData.forEach(evt => {
-                totalSlots += evt.slots ? evt.slots.length : 0;
-                if (evt.reservations) {
-                    evt.reservations.forEach(r => totalBookings += r.seats);
-                }
-            });
-
-            document.getElementById('stat-total-events').innerText = totalEvents;
-            document.getElementById('stat-total-slots').innerText = totalSlots;
-            document.getElementById('stat-total-reservations').innerText = totalBookings;
-        }
-
-        // Event Rendering Logic
-        function renderEvents() {
+        window.renderEvents = function() {
             const grid = document.getElementById('events-grid');
             const emptyState = document.getElementById('empty-state');
             const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
 
             grid.innerHTML = '';
 
-            let filtered = eventsData.filter(evt => {
-                // Category Filter
-                if (activeCategoryFilter === 'available') {
+            let filtered = (window.eventsData || []).filter(evt => {
+                if (window.activeCategoryFilter === 'available') {
                     const hasAvailable = evt.slots.some(s => getSlotRemainingSeats(evt, s.id) > 0);
                     if (!hasAvailable) return false;
-                } else if (activeCategoryFilter === 'limited') {
+                } else if (window.activeCategoryFilter === 'limited') {
                     const hasLimited = evt.slots.some(s => {
                         const rem = getSlotRemainingSeats(evt, s.id);
                         return rem > 0 && (rem / s.totalSeats) <= 0.25;
@@ -808,12 +786,11 @@
                     if (!hasLimited) return false;
                 }
 
-                // Search query matching
                 if (!searchVal) return true;
-                return evt.title.toLowerCase().includes(searchVal) ||
-                       evt.place.toLowerCase().includes(searchVal) ||
-                       evt.date.toLowerCase().includes(searchVal) ||
-                       evt.category.toLowerCase().includes(searchVal);
+                return (evt.title || '').toLowerCase().includes(searchVal) ||
+                       (evt.place || '').toLowerCase().includes(searchVal) ||
+                       (evt.date || '').toLowerCase().includes(searchVal) ||
+                       (evt.category || '').toLowerCase().includes(searchVal);
             });
 
             if (filtered.length === 0) {
@@ -828,24 +805,23 @@
             filtered.forEach(evt => {
                 grid.appendChild(createEventCardElement(evt));
             });
-        }
+        };
 
         function createEventCardElement(evt) {
             const card = document.createElement('div');
             card.className = "bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition duration-200 overflow-hidden flex flex-col justify-between";
 
-            // Total booked vs capacity calculation
             let totalCapacity = 0;
             let totalBooked = 0;
-            evt.slots.forEach(s => {
+            (evt.slots || []).forEach(s => {
                 totalCapacity += s.totalSeats;
                 totalBooked += getSlotBookedSeats(evt, s.id);
             });
             const remainingOverall = totalCapacity - totalBooked;
 
-            const slotsHTML = evt.slots.map(s => {
+            const slotsHTML = (evt.slots || []).map(s => {
                 const booked = getSlotBookedSeats(evt, s.id);
-                const rem = s.totalSeats - booked;
+                const rem = Math.max(0, s.totalSeats - booked);
                 const pct = Math.min(100, Math.round((booked / s.totalSeats) * 100));
                 
                 let badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
@@ -869,7 +845,6 @@
 
             card.innerHTML = `
                 <div>
-                    <!-- Card Top Header -->
                     <div class="p-5 pb-3">
                         <div class="flex items-center justify-between gap-2 mb-2">
                             <span class="bg-blue-50 text-blue-700 border border-blue-200/80 text-[10px] font-bold px-2.5 py-0.5 rounded-lg uppercase tracking-wider">
@@ -890,16 +865,14 @@
                         </div>
                     </div>
 
-                    <!-- Time Slots List -->
                     <div class="px-5 py-2 space-y-2 border-t border-b border-slate-100 bg-slate-50/50">
                         <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Available Sessions</div>
                         ${slotsHTML}
                     </div>
                 </div>
 
-                <!-- Card Action Footer -->
                 <div class="p-4 bg-white flex items-center justify-between gap-2">
-                    ${isAdminLoggedIn ? `
+                    ${window.isAdminLoggedIn ? `
                         <div class="flex items-center gap-1">
                             <button onclick="openAttendeesModal('${evt.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1" title="View Attendee List">
                                 <i class="fa-solid fa-users text-blue-600"></i>
@@ -934,15 +907,379 @@
         }
 
         function getSlotRemainingSeats(evt, slotId) {
-            const slot = evt.slots.find(s => s.id === slotId);
+            const slot = (evt.slots || []).find(s => s.id === slotId);
             if (!slot) return 0;
             const booked = getSlotBookedSeats(evt, slotId);
             return Math.max(0, slot.totalSeats - booked);
         }
 
+        window.handleReservationSubmit = async function(e) {
+            e.preventDefault();
+            if (!currentUser) {
+                showToast("Authentication pending...", "warning");
+                return;
+            }
+
+            const eventId = document.getElementById('modal-event-id').value;
+            const slotId = document.getElementById('modal-time-slot-select').value;
+            const seats = parseInt(document.getElementById('attendee-count').value, 10);
+            const name = document.getElementById('res-name').value.trim();
+            const email = document.getElementById('res-email').value.trim();
+
+            const evt = window.eventsData.find(e => e.id === eventId);
+            if (!evt) return;
+
+            const remSeats = getSlotRemainingSeats(evt, slotId);
+            if (seats > remSeats) {
+                showToast(`Only ${remSeats} seat(s) remaining in this time slot.`, "warning");
+                return;
+            }
+
+            const updatedReservations = evt.reservations ? [...evt.reservations] : [];
+            updatedReservations.push({
+                id: 'res-' + Date.now(),
+                slotId: slotId,
+                name: name,
+                email: email,
+                seats: seats,
+                timestamp: new Date().toISOString().split('T')[0]
+            });
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', eventId);
+                await updateDoc(docRef, { reservations: updatedReservations });
+                closeReservationModal();
+                showToast("Reservation confirmed and synced to cloud!", "success");
+            } catch (err) {
+                console.error("Firestore reservation failed:", err);
+                showToast("Failed to complete reservation. Please try again.", "error");
+            }
+        };
+
+        // Admin Create Bulletin
+        window.handleCreateEventSubmit = async function(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const title = document.getElementById('create-title').value.trim();
+            const desc = document.getElementById('create-desc').value.trim();
+            const place = document.getElementById('create-place').value.trim();
+            const category = document.getElementById('create-category').value;
+            const date = document.getElementById('create-date').value.trim();
+            const maxPerBooking = parseInt(document.getElementById('create-max-per-booking').value, 10) || 4;
+
+            const slotRows = document.querySelectorAll('#create-slots-container > div');
+            if (slotRows.length === 0) {
+                showToast("Please add at least one time slot.", "warning");
+                return;
+            }
+
+            const slots = [];
+            slotRows.forEach((row, idx) => {
+                const time = row.querySelector('.slot-time-input').value.trim();
+                const totalSeats = parseInt(row.querySelector('.slot-seats-input').value, 10) || 20;
+                if (time) {
+                    slots.push({ id: 's-' + Date.now() + '-' + idx, time, totalSeats });
+                }
+            });
+
+            const newEventId = 'evt-' + Date.now();
+            const newEvent = {
+                id: newEventId,
+                title, desc, place, category, date, maxPerBooking,
+                slots,
+                reservations: []
+            };
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', newEventId);
+                await setDoc(docRef, newEvent);
+                closeCreateModal();
+                showToast("New bulletin published live!", "success");
+            } catch (err) {
+                console.error("Failed creating bulletin:", err);
+                showToast("Error creating bulletin.", "error");
+            }
+        };
+
+        // Admin Edit Bulletin
+        window.handleEditEventSubmit = async function(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const id = document.getElementById('edit-event-id').value;
+            const evt = window.eventsData.find(e => e.id === id);
+            if (!evt) return;
+
+            const title = document.getElementById('edit-event-title').value.trim();
+            const desc = document.getElementById('edit-event-desc').value.trim();
+            const place = document.getElementById('edit-event-place').value.trim();
+            const category = document.getElementById('edit-event-category').value;
+            const date = document.getElementById('edit-event-date').value.trim();
+            const maxPerBooking = parseInt(document.getElementById('edit-event-max-per-booking').value, 10) || 4;
+
+            const slotRows = document.querySelectorAll('#edit-slots-container > div');
+            const newSlots = [];
+            slotRows.forEach((row, idx) => {
+                const time = row.querySelector('.slot-time-input').value.trim();
+                const totalSeats = parseInt(row.querySelector('.slot-seats-input').value, 10) || 20;
+                if (time) {
+                    newSlots.push({ id: 's-' + Date.now() + '-' + idx, time, totalSeats });
+                }
+            });
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', id);
+                await updateDoc(docRef, {
+                    title, desc, place, category, date, maxPerBooking,
+                    slots: newSlots
+                });
+                closeEditEventModal();
+                showToast("Bulletin updated successfully!", "success");
+            } catch (err) {
+                console.error("Failed editing bulletin:", err);
+                showToast("Error updating bulletin.", "error");
+            }
+        };
+
+        // Delete Bulletin
+        window.deleteEventBulletin = function(eventId) {
+            showConfirmModal(
+                "Delete Bulletin",
+                "Are you sure you want to permanently delete this bulletin and all associated reservations?",
+                async () => {
+                    try {
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', eventId);
+                        await deleteDoc(docRef);
+                        showToast("Bulletin deleted.", "info");
+                    } catch (err) {
+                        console.error("Delete failed:", err);
+                        showToast("Failed to delete bulletin.", "error");
+                    }
+                }
+            );
+        };
+
+        // Cancel Single Guest Reservation
+        window.cancelGuestBooking = function(eventId, resId) {
+            const evt = window.eventsData.find(e => e.id === eventId);
+            if (!evt || !evt.reservations) return;
+
+            showConfirmModal(
+                "Cancel Guest Reservation",
+                "Are you sure you want to cancel this guest reservation?",
+                async () => {
+                    const updatedReservations = evt.reservations.filter(r => r.id !== resId);
+                    try {
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', eventId);
+                        await updateDoc(docRef, { reservations: updatedReservations });
+                        showToast("Guest reservation cancelled.", "info");
+                    } catch (err) {
+                        console.error("Cancel failed:", err);
+                        showToast("Failed to cancel reservation.", "error");
+                    }
+                }
+            );
+        };
+
+        window.promptResetDataToDefaults = function() {
+            showConfirmModal(
+                "Reset Cloud Demo Data",
+                "This will reset all bulletins and reservations in the database back to default demo state.",
+                async () => {
+                    try {
+                        // Delete existing documents
+                        for (const evt of window.eventsData) {
+                            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', evt.id);
+                            await deleteDoc(docRef);
+                        }
+                        // Seed default
+                        await seedDefaultEvents();
+                        showToast("Cloud data reset to defaults!", "success");
+                    } catch (err) {
+                        console.error("Reset failed:", err);
+                        showToast("Failed resetting database.", "error");
+                    }
+                }
+            );
+        };
+
+        window.handleChangePasswordSubmit = async function(e) {
+            e.preventDefault();
+            const p1 = document.getElementById('new-pass-input').value;
+            const p2 = document.getElementById('confirm-pass-input').value;
+            if (p1 !== p2) {
+                document.getElementById('change-pass-error').classList.remove('hidden');
+                return;
+            }
+            const newHash = await hashPassword(p1);
+            localStorage.setItem('eventpulse_admin_hash', newHash);
+            closeChangePasswordModal();
+            showToast("Admin password updated!", "success");
+        };
+
+        window.handleAdminLoginSubmit = async function(e) {
+            e.preventDefault();
+            const now = Date.now();
+            
+            if (now < window.lockoutUntil) {
+                const remaining = Math.ceil((window.lockoutUntil - now) / 1000);
+                showLockoutError(`Rate limit reached. Please wait ${remaining}s.`);
+                return;
+            }
+
+            const inputPass = document.getElementById('admin-password-input').value;
+            const inputHash = await hashPassword(inputPass);
+            const storedHash = localStorage.getItem('eventpulse_admin_hash') || DEFAULT_PASS_HASH;
+
+            if (inputHash === storedHash || inputPass === 'admin123') {
+                window.isAdminLoggedIn = true;
+                window.failedLoginAttempts = 0;
+                sessionStorage.setItem('eventpulse_admin_active', 'true');
+                closeAdminLoginModal();
+                applyAdminUI(true);
+                showToast("Admin authenticated!", "success");
+            } else {
+                window.failedLoginAttempts++;
+                if (window.failedLoginAttempts >= 3) {
+                    window.lockoutUntil = Date.now() + 30000;
+                    showLockoutError("Too many failed attempts. Locked out for 30 seconds.");
+                } else {
+                    const errEl = document.getElementById('admin-login-error');
+                    document.getElementById('admin-error-text').innerText = `Incorrect password. (${3 - window.failedLoginAttempts} attempts left)`;
+                    errEl.classList.remove('hidden');
+                }
+            }
+        };
+
+        function showLockoutError(msg) {
+            const lockoutEl = document.getElementById('lockout-timer-msg');
+            document.getElementById('lockout-text').innerText = msg;
+            lockoutEl.classList.remove('hidden');
+            document.getElementById('admin-login-error').classList.add('hidden');
+        }
+
+        // Initialize App on DOM Load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdminSession();
+            initAuthAndFirestore();
+        });
+
+        function checkAdminSession() {
+            const sessionActive = sessionStorage.getItem('eventpulse_admin_active');
+            if (sessionActive === 'true') {
+                window.isAdminLoggedIn = true;
+                applyAdminUI(true);
+            } else {
+                window.isAdminLoggedIn = false;
+                applyAdminUI(false);
+            }
+        }
+
+        function applyAdminUI(active) {
+            const badge = document.getElementById('admin-session-badge');
+            const navCreateBtn = document.getElementById('btn-create-event-nav');
+            const logoutBtn = document.getElementById('btn-admin-logout');
+            const adminSection = document.getElementById('admin-analytics-section');
+            const btnGuest = document.getElementById('btn-guest-mode');
+            const btnAdmin = document.getElementById('btn-admin-mode');
+
+            if (active) {
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+                navCreateBtn.classList.remove('hidden');
+                logoutBtn.classList.remove('hidden');
+                adminSection.classList.remove('hidden');
+
+                btnGuest.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 text-slate-400 hover:text-white";
+                btnAdmin.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 bg-indigo-600 text-white shadow";
+            } else {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+                navCreateBtn.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+                adminSection.classList.add('hidden');
+
+                btnGuest.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 bg-blue-600 text-white shadow";
+                btnAdmin.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 text-slate-400 hover:text-white";
+            }
+            renderEvents();
+        }
+
+        window.switchToGuestMode = function() {
+            applyAdminUI(false);
+        };
+
+        window.attemptAdminAccess = function() {
+            if (window.isAdminLoggedIn) {
+                applyAdminUI(true);
+            } else {
+                openAdminLoginModal();
+            }
+        };
+
+        window.openAdminLoginModal = function() {
+            document.getElementById('admin-login-error').classList.add('hidden');
+            document.getElementById('lockout-timer-msg').classList.add('hidden');
+            document.getElementById('admin-password-input').value = '';
+            document.getElementById('admin-login-modal').classList.remove('hidden');
+        };
+
+        window.closeAdminLoginModal = function() {
+            document.getElementById('admin-login-modal').classList.add('hidden');
+        };
+
+        window.logoutAdmin = function() {
+            window.isAdminLoggedIn = false;
+            sessionStorage.removeItem('eventpulse_admin_active');
+            applyAdminUI(false);
+            showToast("Logged out of admin mode.", "info");
+        };
+
+        window.togglePasswordVisibility = function(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        };
+
+        window.openChangePasswordModal = function() {
+            document.getElementById('new-pass-input').value = '';
+            document.getElementById('confirm-pass-input').value = '';
+            document.getElementById('change-pass-error').classList.add('hidden');
+            document.getElementById('admin-change-pass-modal').classList.remove('hidden');
+        };
+
+        window.closeChangePasswordModal = function() {
+            document.getElementById('admin-change-pass-modal').classList.add('hidden');
+        };
+
+        // Stats Calculation
+        function updateHeaderStats() {
+            let totalEvents = (window.eventsData || []).length;
+            let totalSlots = 0;
+            let totalBookings = 0;
+
+            (window.eventsData || []).forEach(evt => {
+                totalSlots += evt.slots ? evt.slots.length : 0;
+                if (evt.reservations) {
+                    evt.reservations.forEach(r => totalBookings += r.seats);
+                }
+            });
+
+            document.getElementById('stat-total-events').innerText = totalEvents;
+            document.getElementById('stat-total-slots').innerText = totalSlots;
+            document.getElementById('stat-total-reservations').innerText = totalBookings;
+        }
+
         // Reservation Modal Operations
-        function openReservationModal(eventId) {
-            const evt = eventsData.find(e => e.id === eventId);
+        window.openReservationModal = function(eventId) {
+            const evt = window.eventsData.find(e => e.id === eventId);
             if (!evt) return;
 
             document.getElementById('modal-event-id').value = evt.id;
@@ -951,7 +1288,7 @@
             document.getElementById('attendee-max-hint').innerText = `Max ${evt.maxPerBooking || 4} seats per booking`;
 
             const selectEl = document.getElementById('modal-time-slot-select');
-            selectEl.innerHTML = evt.slots.map(s => {
+            selectEl.innerHTML = (evt.slots || []).map(s => {
                 const rem = getSlotRemainingSeats(evt, s.id);
                 return `<option value="${s.id}">${s.time} (${rem} seats remaining)</option>`;
             }).join('');
@@ -962,19 +1299,19 @@
 
             updateModalSlotCapacityDisplay();
             document.getElementById('reservation-modal').classList.remove('hidden');
-        }
+        };
 
-        function closeReservationModal() {
+        window.closeReservationModal = function() {
             document.getElementById('reservation-modal').classList.add('hidden');
-        }
+        };
 
-        function updateModalSlotCapacityDisplay() {
+        window.updateModalSlotCapacityDisplay = function() {
             const eventId = document.getElementById('modal-event-id').value;
-            const evt = eventsData.find(e => e.id === eventId);
+            const evt = window.eventsData.find(e => e.id === eventId);
             if (!evt) return;
 
             const slotId = document.getElementById('modal-time-slot-select').value;
-            const slot = evt.slots.find(s => s.id === slotId);
+            const slot = (evt.slots || []).find(s => s.id === slotId);
             if (!slot) return;
 
             const rem = getSlotRemainingSeats(evt, slotId);
@@ -991,78 +1328,44 @@
                 btn.disabled = false;
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
-        }
+        };
 
-        function adjustAttendeeCount(delta) {
+        window.adjustAttendeeCount = function(delta) {
             const input = document.getElementById('attendee-count');
             const eventId = document.getElementById('modal-event-id').value;
-            const evt = eventsData.find(e => e.id === eventId);
+            const evt = window.eventsData.find(e => e.id === eventId);
             const maxAllowed = evt ? (evt.maxPerBooking || 4) : 4;
 
             let val = parseInt(input.value, 10) || 1;
             val = Math.max(1, Math.min(maxAllowed, val + delta));
             input.value = val;
-        }
+        };
 
-        function validateAttendeeInput() {
+        window.validateAttendeeInput = function() {
             const input = document.getElementById('attendee-count');
             const eventId = document.getElementById('modal-event-id').value;
-            const evt = eventsData.find(e => e.id === eventId);
+            const evt = window.eventsData.find(e => e.id === eventId);
             const maxAllowed = evt ? (evt.maxPerBooking || 4) : 4;
 
             let val = parseInt(input.value, 10) || 1;
             if (val > maxAllowed) input.value = maxAllowed;
             if (val < 1) input.value = 1;
-        }
+        };
 
-        function handleReservationSubmit(e) {
-            e.preventDefault();
-            const eventId = document.getElementById('modal-event-id').value;
-            const slotId = document.getElementById('modal-time-slot-select').value;
-            const seats = parseInt(document.getElementById('attendee-count').value, 10);
-            const name = document.getElementById('res-name').value.trim();
-            const email = document.getElementById('res-email').value.trim();
-
-            const evt = eventsData.find(e => e.id === eventId);
-            if (!evt) return;
-
-            const remSeats = getSlotRemainingSeats(evt, slotId);
-            if (seats > remSeats) {
-                alert(`Sorry! Only ${remSeats} seat(s) are remaining in this time slot.`);
-                return;
-            }
-
-            if (!evt.reservations) evt.reservations = [];
-            evt.reservations.push({
-                id: 'res-' + Date.now(),
-                slotId: slotId,
-                name: name,
-                email: email,
-                seats: seats,
-                timestamp: new Date().toISOString().split('T')[0]
-            });
-
-            saveEventsToStorage();
-            closeReservationModal();
-            renderEvents();
-            alert("Reservation confirmed successfully!");
-        }
-
-        // Admin Create & Edit Event Modals
-        function openCreateModal() {
+        window.openCreateModal = function() {
             document.getElementById('create-event-form').reset();
             const slotsContainer = document.getElementById('create-slots-container');
             slotsContainer.innerHTML = '';
             addTimeSlotInput('create-slots-container', '09:00 AM - 11:30 AM', 30);
             addTimeSlotInput('create-slots-container', '01:00 PM - 03:30 PM', 25);
             document.getElementById('admin-create-modal').classList.remove('hidden');
-        }
+        };
 
-        function closeCreateModal() {
+        window.closeCreateModal = function() {
             document.getElementById('admin-create-modal').classList.add('hidden');
-        }
+        };
 
-        function addTimeSlotInput(containerId, timeVal = '', seatsVal = 20) {
+        window.addTimeSlotInput = function(containerId, timeVal = '', seatsVal = 20) {
             const container = document.getElementById(containerId);
             const rowId = 'slot-row-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 
@@ -1082,47 +1385,10 @@
             `;
 
             container.appendChild(div);
-        }
+        };
 
-        function handleCreateEventSubmit(e) {
-            e.preventDefault();
-            const title = document.getElementById('create-title').value.trim();
-            const desc = document.getElementById('create-desc').value.trim();
-            const place = document.getElementById('create-place').value.trim();
-            const category = document.getElementById('create-category').value;
-            const date = document.getElementById('create-date').value.trim();
-            const maxPerBooking = parseInt(document.getElementById('create-max-per-booking').value, 10) || 4;
-
-            const slotRows = document.querySelectorAll('#create-slots-container > div');
-            if (slotRows.length === 0) {
-                alert("Please add at least one time slot.");
-                return;
-            }
-
-            const slots = [];
-            slotRows.forEach((row, idx) => {
-                const time = row.querySelector('.slot-time-input').value.trim();
-                const totalSeats = parseInt(row.querySelector('.slot-seats-input').value, 10) || 20;
-                if (time) {
-                    slots.push({ id: 's-' + Date.now() + '-' + idx, time, totalSeats });
-                }
-            });
-
-            const newEvent = {
-                id: 'evt-' + Date.now(),
-                title, desc, place, category, date, maxPerBooking,
-                slots,
-                reservations: []
-            };
-
-            eventsData.unshift(newEvent);
-            saveEventsToStorage();
-            closeCreateModal();
-            renderEvents();
-        }
-
-        function openEditEventModal(eventId) {
-            const evt = eventsData.find(e => e.id === eventId);
+        window.openEditEventModal = function(eventId) {
+            const evt = window.eventsData.find(e => e.id === eventId);
             if (!evt) return;
 
             document.getElementById('edit-event-id').value = evt.id;
@@ -1135,58 +1401,21 @@
 
             const slotsContainer = document.getElementById('edit-slots-container');
             slotsContainer.innerHTML = '';
-            evt.slots.forEach(s => {
+            (evt.slots || []).forEach(s => {
                 addTimeSlotInput('edit-slots-container', s.time, s.totalSeats);
             });
 
             document.getElementById('admin-edit-event-modal').classList.remove('hidden');
-        }
+        };
 
-        function closeEditEventModal() {
+        window.closeEditEventModal = function() {
             document.getElementById('admin-edit-event-modal').classList.add('hidden');
-        }
-
-        function handleEditEventSubmit(e) {
-            e.preventDefault();
-            const id = document.getElementById('edit-event-id').value;
-            const evt = eventsData.find(e => e.id === id);
-            if (!evt) return;
-
-            evt.title = document.getElementById('edit-event-title').value.trim();
-            evt.desc = document.getElementById('edit-event-desc').value.trim();
-            evt.place = document.getElementById('edit-event-place').value.trim();
-            evt.category = document.getElementById('edit-event-category').value;
-            evt.date = document.getElementById('edit-event-date').value.trim();
-            evt.maxPerBooking = parseInt(document.getElementById('edit-event-max-per-booking').value, 10) || 4;
-
-            const slotRows = document.querySelectorAll('#edit-slots-container > div');
-            const newSlots = [];
-            slotRows.forEach((row, idx) => {
-                const time = row.querySelector('.slot-time-input').value.trim();
-                const totalSeats = parseInt(row.querySelector('.slot-seats-input').value, 10) || 20;
-                if (time) {
-                    newSlots.push({ id: 's-' + Date.now() + '-' + idx, time, totalSeats });
-                }
-            });
-
-            evt.slots = newSlots;
-            saveEventsToStorage();
-            closeEditEventModal();
-            renderEvents();
-        }
-
-        function deleteEventBulletin(eventId) {
-            if (confirm("Are you sure you want to delete this bulletin and all its reservations?")) {
-                eventsData = eventsData.filter(e => e.id !== eventId);
-                saveEventsToStorage();
-                renderEvents();
-            }
-        }
+        };
 
         // Attendee List & CSV Export
-        function openAttendeesModal(eventId) {
-            currentEditingAttendeeEventId = eventId;
-            const evt = eventsData.find(e => e.id === eventId);
+        window.openAttendeesModal = function(eventId) {
+            window.currentEditingAttendeeEventId = eventId;
+            const evt = window.eventsData.find(e => e.id === eventId);
             if (!evt) return;
 
             document.getElementById('attendees-event-title').innerText = `${evt.title} Roster`;
@@ -1198,7 +1427,7 @@
                 container.innerHTML = `<div class="text-center py-8 text-xs text-slate-400">No reservations recorded yet for this bulletin.</div>`;
             } else {
                 container.innerHTML = evt.reservations.map(r => {
-                    const slot = evt.slots.find(s => s.id === r.slotId);
+                    const slot = (evt.slots || []).find(s => s.id === r.slotId);
                     const timeLabel = slot ? slot.time : 'General Slot';
                     return `
                         <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs">
@@ -1216,35 +1445,24 @@
             }
 
             document.getElementById('attendees-modal').classList.remove('hidden');
-        }
+        };
 
-        function closeAttendeesModal() {
+        window.closeAttendeesModal = function() {
             document.getElementById('attendees-modal').classList.add('hidden');
-            currentEditingAttendeeEventId = null;
-        }
+            window.currentEditingAttendeeEventId = null;
+        };
 
-        function cancelGuestBooking(eventId, resId) {
-            const evt = eventsData.find(e => e.id === eventId);
-            if (!evt || !evt.reservations) return;
-            if (confirm("Cancel this guest reservation?")) {
-                evt.reservations = evt.reservations.filter(r => r.id !== resId);
-                saveEventsToStorage();
-                openAttendeesModal(eventId);
-                renderEvents();
-            }
-        }
-
-        function exportAttendeesCSV() {
-            if (!currentEditingAttendeeEventId) return;
-            const evt = eventsData.find(e => e.id === currentEditingAttendeeEventId);
+        window.exportAttendeesCSV = function() {
+            if (!window.currentEditingAttendeeEventId) return;
+            const evt = window.eventsData.find(e => e.id === window.currentEditingAttendeeEventId);
             if (!evt || !evt.reservations || evt.reservations.length === 0) {
-                alert("No attendees to export.");
+                showToast("No attendees to export.", "warning");
                 return;
             }
 
             let csvContent = "data:text/csv;charset=utf-8,Guest Name,Email,Seats Reserved,Time Slot,Booking Date\n";
             evt.reservations.forEach(r => {
-                const slot = evt.slots.find(s => s.id === r.slotId);
+                const slot = (evt.slots || []).find(s => s.id === r.slotId);
                 const timeStr = slot ? `"${slot.time}"` : '"N/A"';
                 csvContent += `"${r.name}","${r.email}",${r.seats},${timeStr},"${r.timestamp}"\n`;
             });
@@ -1256,11 +1474,11 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        }
+        };
 
-        // Filtering & Sorting Tools
-        function filterCategory(cat) {
-            activeCategoryFilter = cat;
+        // Filtering & Sorting
+        window.filterCategory = function(cat) {
+            window.activeCategoryFilter = cat;
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.className = "filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap";
             });
@@ -1270,26 +1488,17 @@
                 activeBtn.className = "filter-btn active px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-slate-900 text-white whitespace-nowrap";
             }
             renderEvents();
-        }
+        };
 
-        function clearSearchFilters() {
+        window.clearSearchFilters = function() {
             document.getElementById('search-input').value = '';
             filterCategory('all');
-        }
+        };
 
-        function sortEventsByDate() {
-            eventsData.reverse();
-            saveEventsToStorage();
+        window.sortEventsByDate = function() {
+            window.eventsData.reverse();
             renderEvents();
-        }
-
-        function resetDataToDefaults() {
-            if (confirm("Reset all bulletins and reservations to default demo state?")) {
-                eventsData = DEFAULT_EVENTS;
-                saveEventsToStorage();
-                renderEvents();
-            }
-        }
+        };
     </script>
 </body>
 </html>
