@@ -400,7 +400,7 @@
                     <input type="text" id="create-title" required placeholder="e.g. Science & Innovation Expo" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Description *</label>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Description (20 words max) *</label>
                     <textarea id="create-desc" required rows="2" placeholder="Brief summary of highlights and guidelines..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -417,6 +417,16 @@
                             <option value="Community">Community</option>
                             <option value="Wellness">Wellness</option>
                         </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Event Date *</label>
+                        <input type="text" id="create-date" required placeholder="e.g. Oct 15, 2026" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Max Seats Per Booking (0 = Open Seating)</label>
+                        <input type="number" id="create-max-per-booking" min="0" value="4" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -472,7 +482,7 @@
                     <input type="text" id="edit-event-title" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Description *</label>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Description (20 words max) *</label>
                     <textarea id="edit-event-desc" required rows="2" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -489,6 +499,16 @@
                             <option value="Community">Community</option>
                             <option value="Wellness">Wellness</option>
                         </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Event Date *</label>
+                        <input type="text" id="edit-event-date" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Max Seats Per Booking (0 = Open Seating)</label>
+                        <input type="number" id="edit-event-max-per-booking" min="0" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -862,7 +882,7 @@
                         <h3 class="text-lg font-bold text-slate-900 leading-snug hover:text-blue-600 transition cursor-pointer" onclick="openReservationModal('${evt.id}')">
                             ${evt.title}
                         </h3>
-                        <p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed whitespace-pre-line break-words">
                             ${evt.desc}
                         </p>
                         <div class="text-xs text-slate-600 font-medium mt-2 flex items-center gap-1.5">
@@ -1017,7 +1037,8 @@
             const place = document.getElementById('create-place').value.trim();
             const category = document.getElementById('create-category').value;
             const date = document.getElementById('create-date').value.trim();
-            const maxPerBooking = parseInt(document.getElementById('create-max-per-booking').value, 10) || 4;
+            const maxValRaw = document.getElementById('create-max-per-booking').value;
+            const maxPerBooking = maxValRaw !== '' && !isNaN(maxValRaw) ? parseInt(maxValRaw, 10) : 4;
 
             const slotRows = document.querySelectorAll('#create-slots-container > div');
             if (slotRows.length === 0) {
@@ -1069,7 +1090,8 @@
             const place = document.getElementById('edit-event-place').value.trim();
             const category = document.getElementById('edit-event-category').value;
             const date = document.getElementById('edit-event-date').value.trim();
-            const maxPerBooking = parseInt(document.getElementById('edit-event-max-per-booking').value, 10) || 4;
+            const maxValRaw = document.getElementById('edit-event-max-per-booking').value;
+            const maxPerBooking = maxValRaw !== '' && !isNaN(maxValRaw) ? parseInt(maxValRaw, 10) : 4;
 
             const slotRows = document.querySelectorAll('#edit-slots-container > div');
             const newSlots = [];
@@ -1323,7 +1345,11 @@
             document.getElementById('modal-event-id').value = evt.id;
             document.getElementById('modal-event-title').innerText = evt.title;
             document.getElementById('modal-event-date-text').innerText = `${evt.date} • ${evt.place}`;
-            document.getElementById('attendee-max-hint').innerText = `Max ${evt.maxPerBooking || 4} seats per booking`;
+            
+            const isZeroMax = evt.maxPerBooking === 0;
+            document.getElementById('attendee-max-hint').innerText = isZeroMax 
+                ? 'Open seating (no per-booking limit)' 
+                : `Max ${evt.maxPerBooking || 4} seats per booking`;
 
             const selectEl = document.getElementById('modal-time-slot-select');
             selectEl.innerHTML = (evt.slots || []).map(s => {
@@ -1371,22 +1397,30 @@
         window.adjustAttendeeCount = function(delta) {
             const input = document.getElementById('attendee-count');
             const eventId = document.getElementById('modal-event-id').value;
+            const slotId = document.getElementById('modal-time-slot-select').value;
             const evt = window.eventsData.find(e => e.id === eventId);
-            const maxAllowed = evt ? (evt.maxPerBooking || 4) : 4;
+            
+            const remSeats = evt ? getSlotRemainingSeats(evt, slotId) : 9999;
+            const limit = (evt && evt.maxPerBooking !== undefined && evt.maxPerBooking !== null) ? evt.maxPerBooking : 4;
+            const maxAllowed = limit === 0 ? remSeats : Math.min(limit, remSeats);
 
             let val = parseInt(input.value, 10) || 1;
-            val = Math.max(1, Math.min(maxAllowed, val + delta));
+            val = Math.max(1, Math.min(maxAllowed > 0 ? maxAllowed : 1, val + delta));
             input.value = val;
         };
 
         window.validateAttendeeInput = function() {
             const input = document.getElementById('attendee-count');
             const eventId = document.getElementById('modal-event-id').value;
+            const slotId = document.getElementById('modal-time-slot-select').value;
             const evt = window.eventsData.find(e => e.id === eventId);
-            const maxAllowed = evt ? (evt.maxPerBooking || 4) : 4;
+
+            const remSeats = evt ? getSlotRemainingSeats(evt, slotId) : 9999;
+            const limit = (evt && evt.maxPerBooking !== undefined && evt.maxPerBooking !== null) ? evt.maxPerBooking : 4;
+            const maxAllowed = limit === 0 ? remSeats : Math.min(limit, remSeats);
 
             let val = parseInt(input.value, 10) || 1;
-            if (val > maxAllowed) input.value = maxAllowed;
+            if (maxAllowed > 0 && val > maxAllowed) input.value = maxAllowed;
             if (val < 1) input.value = 1;
         };
 
