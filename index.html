@@ -1259,7 +1259,7 @@
             const attemptBadge = document.getElementById('attempt-badge');
             if (attemptBadge) {
                 const hasCustomPass = localStorage.getItem('eventpulse_admin_hash') !== null;
-                attemptBadge.innerText = hasCustomPass ? 'Custom Passcode Active' : 'Default: admin123';
+                attemptBadge.innerText = hasCustomPass ? 'Custom Passcode Active' : 'Enter';
             }
             
             document.getElementById('admin-login-modal').classList.remove('hidden');
