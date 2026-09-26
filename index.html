@@ -176,10 +176,6 @@
                         <i class="fa-solid fa-arrow-down-short-wide text-[10px]"></i>
                         <span>Reset Chronological Order</span>
                     </button>
-                    <button onclick="promptResetDataToDefaults()" class="text-xs font-semibold text-rose-600 hover:text-rose-700 border border-slate-200 hover:border-rose-200 bg-white hover:bg-rose-50 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
-                        <i class="fa-solid fa-rotate-right text-[10px]"></i>
-                        <span>Reset Cloud Demo Data</span>
-                    </button>
                 </div>
             </div>
         </section>
@@ -567,60 +563,7 @@
 
         const DEFAULT_PASS_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
 
-        // Default Data Seed with Order Attribute
-        const DEFAULT_EVENTS = [
-            {
-                id: 'evt-101',
-                order: 0,
-                title: 'Tech & AI Innovation Summit',
-                desc: 'Explore cutting-edge developments in artificial intelligence, robotics, and interactive tech demonstrations.',
-                place: 'Main Auditorium & Exhibition Center',
-                date: 'Oct 15, 2026',
-                category: 'Tech & Innovation',
-                maxPerBooking: 4,
-                slots: [
-                    { id: 's1', time: '09:00 AM - 11:30 AM', totalSeats: 30 },
-                    { id: 's2', time: '01:00 PM - 03:30 PM', totalSeats: 25 },
-                    { id: 's3', time: '04:00 PM - 06:00 PM', totalSeats: 20 }
-                ],
-                reservations: [
-                    { id: 'r1', slotId: 's1', name: 'Alice Smith', email: 'alice@example.com', seats: 2, timestamp: '2026-09-20' },
-                    { id: 'r2', slotId: 's2', name: 'Bob Johnson', email: 'bob@example.com', seats: 3, timestamp: '2026-09-21' }
-                ]
-            },
-            {
-                id: 'evt-102',
-                order: 1,
-                title: 'Autumn Symphony & Acoustic Night',
-                desc: 'An enchanting evening of classical orchestral performances and acoustic solos by local talent.',
-                place: 'Grand Performing Arts Hall',
-                date: 'Oct 22, 2026',
-                category: 'Arts & Music',
-                maxPerBooking: 6,
-                slots: [
-                    { id: 's10', time: '06:00 PM - 08:00 PM', totalSeats: 40 },
-                    { id: 's11', time: '08:30 PM - 10:30 PM', totalSeats: 40 }
-                ],
-                reservations: [
-                    { id: 'r3', slotId: 's10', name: 'Charlie Brown', email: 'charlie@example.com', seats: 4, timestamp: '2026-09-22' }
-                ]
-            },
-            {
-                id: 'evt-103',
-                order: 2,
-                title: 'Mindfulness & Wellness Retreat',
-                desc: 'Interactive guided meditation sessions, gentle yoga practices, and stress management strategies.',
-                place: 'Community Recreation Center Room 3',
-                date: 'Nov 05, 2026',
-                category: 'Wellness',
-                maxPerBooking: 2,
-                slots: [
-                    { id: 's20', time: '08:00 AM - 10:00 AM', totalSeats: 15 },
-                    { id: 's21', time: '10:30 AM - 12:30 PM', totalSeats: 15 }
-                ],
-                reservations: []
-            }
-        ];
+        const DEFAULT_EVENTS = [];
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'eventpulse-hub-app';
         const firebaseConfig = typeof __firebase_config !== 'undefined'
@@ -735,7 +678,9 @@
                 }
 
                 if (snapshot.empty) {
-                    await seedDefaultEvents();
+                    window.eventsData = [];
+                    renderEvents();
+                    updateHeaderStats();
                     return;
                 }
 
@@ -761,18 +706,6 @@
                 }
                 showToast("Failed to connect to cloud database.", "error");
             });
-        }
-
-        async function seedDefaultEvents() {
-            if (!currentUser) return;
-            try {
-                for (const evt of DEFAULT_EVENTS) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', evt.id);
-                    await setDoc(docRef, evt);
-                }
-            } catch (err) {
-                console.error("Failed to seed default events:", err);
-            }
         }
 
         // Crypto helper for password hashing (SHA-256)
@@ -1197,28 +1130,6 @@
                     } catch (err) {
                         console.error("Cancel failed:", err);
                         showToast("Failed to cancel reservation.", "error");
-                    }
-                }
-            );
-        };
-
-        window.promptResetDataToDefaults = function() {
-            showConfirmModal(
-                "Reset Cloud Demo Data",
-                "This will reset all bulletins and reservations in the database back to default demo state.",
-                async () => {
-                    try {
-                        // Delete existing documents
-                        for (const evt of window.eventsData) {
-                            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', evt.id);
-                            await deleteDoc(docRef);
-                        }
-                        // Seed default
-                        await seedDefaultEvents();
-                        showToast("Cloud data reset to defaults!", "success");
-                    } catch (err) {
-                        console.error("Reset failed:", err);
-                        showToast("Failed resetting database.", "error");
                     }
                 }
             );
