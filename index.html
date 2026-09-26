@@ -1,1502 +1,1295 @@
-            <div class="bg-slate-800 p-1 rounded-xl border border-slate-700 flex items-center shadow-inner">
-                <button id="btn-guest-mode" onclick="setRole('guest')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 bg-blue-600 text-white shadow">
-                    <i class="fa-solid fa-user"></i>
-                    <span>Guest View</span>
-                </button>
-                <button id="btn-admin-mode" onclick="attemptAdminAccess()" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-user-gear"></i>
-                    <span>Admin Portal</span>
-                </button>
-            </div>
-            <button id="btn-create-event-nav" onclick="openCreateModal()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl font-medium text-sm transition shadow-md flex items-center space-x-2">
-                <i class="fa-solid fa-plus"></i>
-                <span class="hidden sm:inline">Add Bulletin</span>
-            </button>
-        </div>
-    </div>
-</header>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventPulse - Online Reservation & Bulletin System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f6ff',
+                            100: '#e0edff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
 
-<section class="bg-gradient-to-b from-slate-900 to-slate-800 text-white pb-10 pt-8 px-4 sm:px-6 lg:px-8 border-b border-slate-700/50">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-        <div class="space-y-2">
-            <div class="inline-flex items-center space-x-2 bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-semibold px-3 py-1 rounded-full">
-                <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                </span>
-                <span>Live Multi-Slot Reservation Active</span>
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-30 bg-slate-900 text-white shadow-lg border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-blue-600 to-indigo-500 p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid fa-ticket text-xl text-white"></i>
+                </div>
+                <div>
+                    <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-blue-200 bg-clip-text text-transparent">EventPulse</span>
+                    <span class="text-[11px] block text-slate-400 font-medium">Bulletin & Slot Reservations</span>
+                </div>
             </div>
-            <h1 id="page-title" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Upcoming Event Bulletins</h1>
-            <p id="page-subtitle" class="text-slate-400 text-sm sm:text-base max-w-2xl">Browse upcoming events, select from available time slots, check seat capacity per slot, and reserve your spots instantly.</p>
-        </div>
-        <div class="grid grid-cols-3 gap-3">
-            <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 p-3 rounded-xl text-center">
-                <div id="stat-total-events" class="text-xl sm:text-2xl font-bold text-blue-400">0</div>
-                <div class="text-[11px] text-slate-400">Total Bulletins</div>
-            </div>
-            <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 p-3 rounded-xl text-center">
-                <div id="stat-total-slots" class="text-xl sm:text-2xl font-bold text-purple-400">0</div>
-                <div class="text-[11px] text-slate-400">Time Slots</div>
-            </div>
-            <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 p-3 rounded-xl text-center">
-                <div id="stat-total-reservations" class="text-xl sm:text-2xl font-bold text-emerald-400">0</div>
-                <div class="text-[11px] text-slate-400">Seats Booked</div>
-            </div>
-        </div>
-    </div>
-</section>
 
-<main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-    <!-- Admin Management Section -->
-    <section id="admin-analytics-section" class="hidden">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80">
-            <div>
-                <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-blue-600"></i>
-                    Bulletin Management & Quick Controls
-                </h2>
-                <p class="text-slate-500 text-sm">Sort bulletins chronologically, reset demo data, and manage event schedules.</p>
+            <!-- Role Switcher & Admin Actions -->
+            <div class="flex items-center space-x-3 sm:space-x-4">
+                <div id="admin-session-badge" class="hidden items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1 rounded-xl text-xs font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Admin Mode Active</span>
+                </div>
+
+                <div class="bg-slate-800 p-1 rounded-xl border border-slate-700 flex items-center shadow-inner">
+                    <button id="btn-guest-mode" onclick="switchToGuestMode()" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 bg-blue-600 text-white shadow">
+                        <i class="fa-solid fa-user"></i>
+                        <span>Guest View</span>
+                    </button>
+                    <button id="btn-admin-mode" onclick="attemptAdminAccess()" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-user-gear"></i>
+                        <span id="admin-btn-text">Admin Portal</span>
+                    </button>
+                </div>
+
+                <button id="btn-create-event-nav" onclick="openCreateModal()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl font-semibold text-xs transition shadow-md flex items-center space-x-2 active:scale-95">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="hidden sm:inline">Add Bulletin</span>
+                </button>
+
+                <button id="btn-admin-logout" onclick="logoutAdmin()" class="hidden text-slate-400 hover:text-rose-400 text-xs font-semibold px-2 py-1 transition flex items-center gap-1" title="Log Out Admin">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
             </div>
-            <div class="flex items-center space-x-2">
-                <button onclick="sortEventsByDate()" class="text-xs font-semibold text-blue-600 hover:text-blue-700 border border-blue-200 hover:border-blue-300 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
-                    <i class="fa-solid fa-arrow-down-short-wide"></i>
-                    <span>Sort Chronologically</span>
-                </button>
-                <button onclick="resetDataToDefaults()" class="text-xs font-semibold text-slate-500 hover:text-red-600 border border-slate-200 hover:border-red-200 bg-white hover:bg-red-50 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
-                    <i class="fa-solid fa-rotate-right"></i>
-                    <span>Reset Demo Data</span>
-                </button>
+        </div>
+    </header>
+
+    <!-- Hero Banner & System Stats -->
+    <section class="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 text-white pb-10 pt-8 px-4 sm:px-6 lg:px-8 border-b border-slate-700/50">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div class="space-y-2">
+                <div class="inline-flex items-center space-x-2 bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-semibold px-3 py-1 rounded-full">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                    <span>Live Multi-Slot Reservation System</span>
+                </div>
+                <h1 id="page-title" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Upcoming Event Bulletins</h1>
+                <p id="page-subtitle" class="text-slate-400 text-sm sm:text-base max-w-2xl">Browse upcoming events, view real-time slot availability, and reserve your spots instantly.</p>
+            </div>
+
+            <!-- Stats Widgets -->
+            <div class="grid grid-cols-3 gap-3">
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 p-3 rounded-xl text-center">
+                    <div id="stat-total-events" class="text-xl sm:text-2xl font-bold text-blue-400">0</div>
+                    <div class="text-[11px] text-slate-400 font-medium">Total Bulletins</div>
+                </div>
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 p-3 rounded-xl text-center">
+                    <div id="stat-total-slots" class="text-xl sm:text-2xl font-bold text-purple-400">0</div>
+                    <div class="text-[11px] text-slate-400 font-medium">Time Slots</div>
+                </div>
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 p-3 rounded-xl text-center">
+                    <div id="stat-total-reservations" class="text-xl sm:text-2xl font-bold text-emerald-400">0</div>
+                    <div class="text-[11px] text-slate-400 font-medium">Seats Booked</div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Search and Filter Controls -->
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
-        <div class="relative w-full sm:w-80">
-            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-            <input type="text" id="search-input" oninput="renderEvents()" placeholder="Search events, venues, or dates..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
-        </div>
-        <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-            <button onclick="filterCategory('all')" id="filter-all" class="filter-btn active px-3.5 py-1.5 rounded-xl text-xs font-medium transition bg-slate-900 text-white whitespace-nowrap">All Events</button>
-            <button onclick="filterCategory('available')" id="filter-available" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Seats Available</button>
-            <button onclick="filterCategory('limited')" id="filter-limited" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Filling Fast (< 25%)</button>
-        </div>
-    </div>
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-    <!-- Bulletin Grid -->
-    <section>
-        <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-        <div id="empty-state" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
-            <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fa-solid fa-calendar-xmark text-2xl"></i>
-            </div>
-            <h3 class="text-lg font-bold text-slate-800">No Bulletins Found</h3>
-            <p class="text-slate-500 text-sm mt-1 max-w-sm mx-auto">Try adjusting your search query or clear filters to see all available events.</p>
-            <button onclick="clearSearchFilters()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium shadow hover:bg-blue-700 transition">Reset Filters</button>
-        </div>
-    </section>
-</main>
-
-<!-- Reservation Modal (Guest) -->
-<div id="reservation-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col">
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white relative shrink-0">
-            <button onclick="closeReservationModal()" class="absolute right-4 top-4 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <span class="text-xs uppercase font-semibold tracking-wider text-blue-200 block mb-1">Reserve Seats</span>
-            <h3 id="modal-event-title" class="text-xl font-bold leading-snug">Event Title</h3>
-            <p id="modal-event-time" class="text-xs text-blue-100 mt-1 flex items-center gap-1.5">
-                <i class="fa-regular fa-calendar-days"></i> <span id="modal-event-date-text">--</span>
-            </p>
-        </div>
-        <form id="reservation-form" onsubmit="handleReservationSubmit(event)" class="p-6 space-y-4 overflow-y-auto flex-grow">
-            <input type="hidden" id="modal-event-id">
-            <!-- Time Slot Selector -->
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Select Time Slot *</label>
-                <select id="modal-time-slot-select" onchange="updateModalSlotCapacityDisplay()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
-                </select>
-            </div>
-            <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-2">
-                <div class="flex justify-between text-xs font-semibold">
-                    <span class="text-slate-600">Selected Slot Capacity</span>
-                    <span id="modal-seats-status-text" class="text-blue-600">-- Left</span>
+        <!-- Admin Quick Controls Header (Visible only to logged in Admin) -->
+        <section id="admin-analytics-section" class="hidden">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-indigo-950/20 border border-indigo-200/60 p-5 rounded-2xl shadow-sm">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-indigo-600"></i>
+                        Admin Controls & Quick Tools
+                    </h2>
+                    <p class="text-slate-500 text-xs mt-0.5">Manage event bulletins, export attendee lists, change password, or reset demo data.</p>
                 </div>
-                <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-                    <div id="modal-seat-progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">
-                    How many seats would you like to reserve?
-                </label>
-                <div class="flex items-center space-x-3">
-                    <button type="button" onclick="adjustAttendeeCount(-1)" class="w-11 h-11 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold flex items-center justify-center transition text-lg active:scale-95">
-                        <i class="fa-solid fa-minus text-sm"></i>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="openChangePasswordModal()" class="text-xs font-semibold text-indigo-700 hover:text-indigo-800 border border-indigo-200 hover:border-indigo-300 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
+                        <i class="fa-solid fa-key text-[10px]"></i>
+                        <span>Change Password</span>
                     </button>
-                    <input type="number" id="attendee-count" min="1" value="1" oninput="validateAttendeeInput()" class="w-full text-center text-xl font-bold py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none">
-                    <button type="button" onclick="adjustAttendeeCount(1)" class="w-11 h-11 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold flex items-center justify-center transition text-lg active:scale-95">
-                        <i class="fa-solid fa-plus text-sm"></i>
+                    <button onclick="sortEventsByDate()" class="text-xs font-semibold text-blue-700 hover:text-blue-800 border border-blue-200 hover:border-blue-300 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
+                        <i class="fa-solid fa-arrow-down-short-wide text-[10px]"></i>
+                        <span>Sort Chronologically</span>
+                    </button>
+                    <button onclick="resetDataToDefaults()" class="text-xs font-semibold text-rose-600 hover:text-rose-700 border border-slate-200 hover:border-rose-200 bg-white hover:bg-rose-50 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
+                        <i class="fa-solid fa-rotate-right text-[10px]"></i>
+                        <span>Reset Demo Data</span>
                     </button>
                 </div>
-                <p id="attendee-max-hint" class="text-xs text-slate-400 mt-1.5 text-center">Maximum seats per booking</p>
             </div>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Your Full Name *</label>
-                    <input type="text" id="res-name" required placeholder="Jane Doe" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Email Address *</label>
-                    <input type="email" id="res-email" required oninput="updateModalSlotCapacityDisplay()" placeholder="jane@example.com" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
-                </div>
+        </section>
+
+        <!-- Search & Category Filters -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
+            <div class="relative w-full sm:w-80">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="search-input" oninput="renderEvents()" placeholder="Search events, venues, or dates..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
             </div>
-            <div class="pt-2">
-                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-blue-500/25 transition duration-200 flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-check-circle"></i>
-                    <span>Confirm Reservation</span>
+            <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                <button onclick="filterCategory('all')" id="filter-all" class="filter-btn active px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-slate-900 text-white whitespace-nowrap">All Events</button>
+                <button onclick="filterCategory('available')" id="filter-available" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Seats Available</button>
+                <button onclick="filterCategory('limited')" id="filter-limited" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Filling Fast (&lt; 25%)</button>
+            </div>
+        </div>
+
+        <!-- Bulletin Grid -->
+        <section>
+            <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            
+            <div id="empty-state" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
+                <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-calendar-xmark text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">No Bulletins Found</h3>
+                <p class="text-slate-500 text-xs sm:text-sm mt-1 max-w-sm mx-auto">Try adjusting your search query or clear filters to see all available events.</p>
+                <button onclick="clearSearchFilters()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold shadow hover:bg-blue-700 transition">Reset Search & Filters</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            EventPulse Bulletin & Reservation Hub &bull; Hosted on GitHub Pages
+        </div>
+    </footer>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Guest Reservation Modal -->
+    <div id="reservation-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white relative shrink-0">
+                <button onclick="closeReservationModal()" class="absolute right-4 top-4 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
                 </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Admin Authentication Modal (Google Sign-In) -->
-<div id="admin-login-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-slate-100">
-        <div class="px-6 py-5 bg-slate-900 text-white flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-shield-halved text-amber-400 text-lg"></i>
-                <h3 class="font-bold text-lg">Admin Authentication</h3>
-            </div>
-            <button onclick="closeAdminLoginModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-800 transition">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-        <div class="p-6 space-y-5 text-center">
-            <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-blue-100 shadow-sm">
-                <i class="fa-brands fa-google"></i>
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800 text-base">Authorized Google Account Required</h4>
-                <p class="text-slate-500 text-xs mt-1.5 leading-relaxed">
-                    To access admin controls, please sign in with an approved Google Account (<span class="font-semibold text-slate-700">jaebang.kim@stpaulhanoi.com</span>).
+                <span class="text-[11px] uppercase font-bold tracking-wider text-blue-200 block mb-0.5">Reserve Seats</span>
+                <h3 id="modal-event-title" class="text-xl font-bold leading-snug">Event Title</h3>
+                <p id="modal-event-time" class="text-xs text-blue-100 mt-1 flex items-center gap-1.5">
+                    <i class="fa-regular fa-calendar-days"></i> <span id="modal-event-date-text">--</span>
                 </p>
             </div>
-
-            <div id="admin-login-error" class="text-xs text-rose-600 bg-rose-50 border border-rose-200 p-3 rounded-xl hidden text-left font-medium">
-                <i class="fa-solid fa-circle-exclamation mr-1"></i> <span id="admin-error-text">Authentication failed.</span>
-            </div>
-
-            <div class="pt-2 space-y-2">
-                <button id="btn-google-login" onclick="loginWithGoogle()" class="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm shadow-md transition flex items-center justify-center space-x-2 group">
-                    <i class="fa-brands fa-google text-rose-500 group-hover:scale-110 transition-transform"></i>
-                    <span>Sign in with Google</span>
-                </button>
-                <button type="button" onclick="closeAdminLoginModal()" class="w-full py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-xs hover:bg-slate-100 transition">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Admin Create Bulletin Modal with Multi-Time Slots -->
-<div id="admin-create-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col">
-        <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center shrink-0">
-            <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-plus-circle text-emerald-400 text-lg"></i>
-                <h3 class="font-bold text-lg">Create Mini Bulletin</h3>
-            </div>
-            <button onclick="closeCreateModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-800 transition">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-        <form id="create-event-form" onsubmit="handleCreateEventSubmit(event)" class="p-6 space-y-4 overflow-y-auto flex-grow">
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Event Name *</label>
-                <input type="text" id="create-title" required placeholder="e.g. Annual School Science Fair" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Brief Description (20 words maximum) *</label>
-                <textarea id="create-desc" required rows="2" placeholder="Brief overview of event highlights, activities, or guidelines (up to 20 words)..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Place / Venue *</label>
-                    <input type="text" id="create-place" required placeholder="e.g. Gymnasium & Science Hall" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Category Badge</label>
-                    <select id="create-category" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                        <option value="Tech & Innovation">Tech & Innovation</option>
-                        <option value="Arts & Music">Arts & Music</option>
-                        <option value="Workshop">Workshop</option>
-                        <option value="Community">Community</option>
-                        <option value="Wellness">Wellness</option>
-                    </select>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Event Date *</label>
-                    <input type="text" id="create-date" required placeholder="e.g. Oct 15, 2026" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Max Seats Per Booking</label>
-                    <input type="number" id="create-max-per-booking" min="0" placeholder="e.g. 4 (0 for no limit)" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                </div>
-            </div>
-            <!-- Multiple Time Slots Section -->
-            <div class="pt-2 border-t border-slate-200">
-                <div class="flex items-center justify-between mb-2">
-                    <label class="block text-xs font-bold text-slate-800 uppercase tracking-wider">
-                        <i class="fa-solid fa-clock text-blue-600 mr-1"></i> Time Slots & Seat Limits for this Date *
-                    </label>
-                    <button type="button" onclick="addTimeSlotInput('create-slots-container')" class="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition flex items-center space-x-1 border border-blue-200">
-                        <i class="fa-solid fa-plus text-[10px]"></i>
-                        <span>Add Time Slot</span>
-                    </button>
-                </div>
-                <p class="text-[11px] text-slate-500 mb-3">Specify each session time and seat capacity (Set capacity to 0 for unlimited seats).</p>
-                <div id="create-slots-container" class="space-y-2">
-                    <!-- Dynamic slot rows will be populated here -->
-                </div>
-            </div>
-            <div class="pt-3 border-t border-slate-100 flex justify-end space-x-3">
-                <button type="button" onclick="closeCreateModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-100 transition">Cancel</button>
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-md transition">Publish Bulletin</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Admin Edit Bulletin Modal -->
-<div id="admin-edit-event-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col">
-        <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center shrink-0">
-            <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-pen-to-square text-blue-400 text-lg"></i>
-                <h3 class="font-bold text-lg">Edit Bulletin & Time Slots</h3>
-            </div>
-            <button onclick="closeEditEventModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-800 transition">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-        <form id="edit-event-form" onsubmit="handleEditEventSubmit(event)" class="p-6 space-y-4 overflow-y-auto flex-grow">
-            <input type="hidden" id="edit-event-id">
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Event Name *</label>
-                <input type="text" id="edit-event-title" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Brief Description (20 words maximum) *</label>
-                <textarea id="edit-event-desc" required rows="2" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Place / Venue *</label>
-                    <input type="text" id="edit-event-place" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Category Badge</label>
-                    <select id="edit-event-category" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                        <option value="Tech & Innovation">Tech & Innovation</option>
-                        <option value="Arts & Music">Arts & Music</option>
-                        <option value="Workshop">Workshop</option>
-                        <option value="Community">Community</option>
-                        <option value="Wellness">Wellness</option>
-                    </select>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Event Date *</label>
-                    <input type="text" id="edit-event-date" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Max Seats Per Booking</label>
-                    <input type="number" id="edit-event-max-per-booking" min="0" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                </div>
-            </div>
-            <!-- Multiple Time Slots Section -->
-            <div class="pt-2 border-t border-slate-200">
-                <div class="flex items-center justify-between mb-2">
-                    <label class="block text-xs font-bold text-slate-800 uppercase tracking-wider">
-                        <i class="fa-solid fa-clock text-blue-600 mr-1"></i> Time Slots & Seat Quotas *
-                    </label>
-                    <button type="button" onclick="addTimeSlotInput('edit-slots-container')" class="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition flex items-center space-x-1 border border-blue-200">
-                        <i class="fa-solid fa-plus text-[10px]"></i>
-                        <span>Add Time Slot</span>
-                    </button>
-                </div>
-                <div id="edit-slots-container" class="space-y-2">
-                    <!-- Dynamic slot rows for editing -->
-                </div>
-            </div>
-            <div class="pt-3 border-t border-slate-100 flex justify-end space-x-3">
-                <button type="button" onclick="closeEditEventModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-100 transition">Cancel</button>
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm shadow-md transition">Update Bulletin</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- View Event Attendees Modal (Admin) -->
-<div id="attendees-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-100 max-h-[85vh] flex flex-col">
-        <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center shrink-0">
-            <div>
-                <h3 class="font-bold text-lg" id="attendees-event-title">Attendee Roster</h3>
-                <p class="text-xs text-slate-400" id="attendees-count-summary">0 reservations recorded</p>
-            </div>
-            <button onclick="closeAttendeesModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-800 transition">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-        <div class="p-6 overflow-y-auto flex-grow space-y-4">
-            <div id="attendees-list-container" class="space-y-4"></div>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Reservation Modal (Admin) -->
-<div id="edit-reservation-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-slate-100">
-        <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-user-pen text-blue-400"></i>
-                <h3 class="font-bold text-base">Edit Guest Booking</h3>
-            </div>
-            <button onclick="closeEditReservationModal()" class="text-slate-400 hover:text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-800 transition">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-        <form id="edit-reservation-form" onsubmit="handleEditReservationSubmit(event)" class="p-6 space-y-4">
-            <input type="hidden" id="edit-res-event-id">
-            <input type="hidden" id="edit-res-slot-id">
-            <input type="hidden" id="edit-res-index">
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Time Slot</label>
-                <select id="edit-res-slot-select" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Guest Name</label>
-                <input type="text" id="edit-res-name" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
-                <input type="email" id="edit-res-email" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Number of Seats</label>
-                <input type="number" id="edit-res-seats" min="1" max="50" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-            </div>
-            <div class="pt-2 flex space-x-2">
-                <button type="button" onclick="closeEditReservationModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-100 transition">Cancel</button>
-                <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md transition">Save Changes</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Toast Notification Banner -->
-<div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
-    <div class="bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3 border border-slate-700">
-        <div id="toast-icon-wrapper" class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-            <i id="toast-icon" class="fa-solid fa-circle-check"></i>
-        </div>
-        <div>
-            <p id="toast-title" class="text-sm font-bold">Success!</p>
-            <p id="toast-message" class="text-xs text-slate-300">Action completed.</p>
-        </div>
-    </div>
-</div>
-
-<footer class="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-500">
-    <div class="max-w-7xl mx-auto px-4">
-        <p>© 2026 EventPulse Online Reservation Platform. Multi-Slot Bulletin & Seat Reservation System.</p>
-    </div>
-</footer>
-
-<!-- Firebase & Google Authentication Modules -->
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { 
-        getAuth, 
-        signInAnonymously, 
-        signInWithCustomToken, 
-        GoogleAuthProvider, 
-        signInWithPopup, 
-        signOut, 
-        onAuthStateChanged 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-        getFirestore, 
-        doc, 
-        onSnapshot, 
-        setDoc
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyAnggvxXx5JHMiCRAYobwpEy1AaJpRmbTE",
-        authDomain: "event-reservation-system-5e70d.firebaseapp.com",
-        projectId: "event-reservation-system-5e70d",
-        storageBucket: "event-reservation-system-5e70d.firebasestorage.app",
-        messagingSenderId: "511892513417",
-        appId: "1:511892513417:web:8b79f397d6f6718c479c58",
-        measurementId: "G-3NEHFY0876"
-    };
-
-    // Allowed Google Admin Emails matching Firestore Rules
-    const ALLOWED_ADMIN_EMAILS = [
-        "jaebang.kim@stpaulhanoi.com"
-    ];
-
-    let db = null;
-    let auth = null;
-    window.isFirebaseActive = false;
-    window.currentUser = null;
-
-    async function initFirebaseRealtime() {
-        try {
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-
-            // Auth state observer
-            onAuthStateChanged(auth, (user) => {
-                window.currentUser = user;
-                const badge = document.getElementById('admin-user-badge');
-                const emailText = document.getElementById('admin-email-text');
-                const avatar = document.getElementById('admin-avatar');
-
-                if (user && !user.isAnonymous && user.email) {
-                    const userEmailLower = user.email.toLowerCase();
-                    const isApprovedAdmin = user.emailVerified && ALLOWED_ADMIN_EMAILS.includes(userEmailLower);
-
-                    if (isApprovedAdmin) {
-                        window.isAdminAuthenticated = true;
-                        if (emailText) emailText.textContent = user.email;
-                        if (avatar) {
-                            if (user.photoURL) {
-                                avatar.src = user.photoURL;
-                                avatar.classList.remove('hidden');
-                            } else {
-                                avatar.classList.add('hidden');
-                            }
-                        }
-                        if (badge) badge.classList.remove('hidden');
-                    } else {
-                        // Unauthorized Google account
-                        window.isAdminAuthenticated = false;
-                        if (badge) badge.classList.add('hidden');
-                        if (window.currentRole === 'admin') {
-                            window.setRole('guest');
-                        }
-                        window.showToast('Access Denied', `The account (${user.email}) is not authorized for Admin write permissions.`, 'error');
-                    }
-                } else {
-                    window.isAdminAuthenticated = false;
-                    if (badge) badge.classList.add('hidden');
-                    if (window.currentRole === 'admin') {
-                        window.setRole('guest');
-                    }
-                }
-            });
-
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else if (!auth.currentUser) {
-                await signInAnonymously(auth);
-            }
-
-            window.isFirebaseActive = true;
-            console.log("Connected to Firebase Realtime Database.");
-
-            // Document aligned with Firestore Security Rules path:
-            // /artifacts/ms-house-hub/public/data/houseCup/events
-            const eventsDocRef = doc(db, 'artifacts', 'ms-house-hub', 'public', 'data', 'houseCup', 'events');
             
-            onSnapshot(eventsDocRef, (docSnap) => {
-                if (docSnap.exists() && docSnap.data().items) {
-                    const realtimeEvents = docSnap.data().items || [];
-                    realtimeEvents.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-                    window.events = realtimeEvents;
-                    window.saveEventsToStorage();
-                    window.renderEvents();
-                    window.updateGlobalStats();
-                }
-            }, (error) => {
-                console.warn("Firestore snapshot error, defaulting to local storage mode:", error);
-            });
-        } catch (err) {
-            console.warn("Firebase initialization deferred or running with local fallback.", err);
-        }
-    }
+            <form id="reservation-form" onsubmit="handleReservationSubmit(event)" class="p-6 space-y-4 overflow-y-auto flex-grow">
+                <input type="hidden" id="modal-event-id">
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Select Time Slot *</label>
+                    <select id="modal-time-slot-select" onchange="updateModalSlotCapacityDisplay()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
+                    </select>
+                </div>
 
-    // Expose Google Sign-In helper to window scope
-    window.loginWithGoogle = async function() {
-        const errorElement = document.getElementById('admin-login-error');
-        const errorText = document.getElementById('admin-error-text');
-        const btnGoogle = document.getElementById('btn-google-login');
+                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-2">
+                    <div class="flex justify-between text-xs font-semibold">
+                        <span class="text-slate-600">Selected Slot Availability</span>
+                        <span id="modal-seats-status-text" class="text-blue-600">-- Left</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                        <div id="modal-seat-progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
 
-        if (!auth) {
-            if (errorElement && errorText) {
-                errorText.textContent = "Firebase Auth is initializing. Please try again in a moment.";
-                errorElement.classList.remove('hidden');
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-2">
+                        How many seats would you like to reserve?
+                    </label>
+                    <div class="flex items-center space-x-3">
+                        <button type="button" onclick="adjustAttendeeCount(-1)" class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold flex items-center justify-center transition text-sm active:scale-95">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <input type="number" id="attendee-count" min="1" value="1" oninput="validateAttendeeInput()" class="w-full text-center text-lg font-bold py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none">
+                        <button type="button" onclick="adjustAttendeeCount(1)" class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold flex items-center justify-center transition text-sm active:scale-95">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <p id="attendee-max-hint" class="text-[11px] text-slate-400 mt-1.5 text-center font-medium">Maximum seats per booking</p>
+                </div>
+
+                <div class="space-y-3 pt-1">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Your Full Name *</label>
+                        <input type="text" id="res-name" required placeholder="Jane Doe" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Email Address *</label>
+                        <input type="email" id="res-email" required placeholder="jane@example.com" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" id="btn-confirm-reservation" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-blue-500/25 transition duration-200 flex items-center justify-center space-x-2 text-xs sm:text-sm">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span>Confirm Reservation</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Enhanced Admin Authentication Modal -->
+    <div id="admin-login-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-slate-100">
+            <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-lock text-amber-400 text-base"></i>
+                    <h3 class="font-bold text-base">Admin Security Portal</h3>
+                </div>
+                <button onclick="closeAdminLoginModal()" class="text-slate-400 hover:text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            
+            <form id="admin-login-form" onsubmit="handleAdminLoginSubmit(event)" class="p-6 space-y-4">
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Admin Passcode</label>
+                        <span id="attempt-badge" class="text-[10px] text-slate-400 font-semibold">Default: admin123</span>
+                    </div>
+                    
+                    <div class="relative">
+                        <input type="password" id="admin-password-input" required placeholder="Enter password" class="w-full pl-3.5 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono">
+                        <button type="button" onclick="togglePasswordVisibility('admin-password-input', 'pass-eye-icon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+                            <i class="fa-solid fa-eye" id="pass-eye-icon"></i>
+                        </button>
+                    </div>
+
+                    <div id="admin-login-error" class="text-xs text-rose-500 mt-2 hidden font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span id="admin-error-text">Incorrect password.</span>
+                    </div>
+
+                    <div id="lockout-timer-msg" class="text-xs text-amber-600 mt-2 hidden font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-hourglass-half"></i>
+                        <span id="lockout-text">Locked out. Try again in 30s.</span>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex space-x-2">
+                    <button type="button" onclick="closeAdminLoginModal()" class="w-1/2 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold text-xs hover:bg-slate-100 transition">Cancel</button>
+                    <button type="submit" id="btn-submit-admin" class="w-1/2 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md transition">Authenticate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Change Password Modal -->
+    <div id="admin-change-pass-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-slate-100">
+            <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-key text-amber-400 text-base"></i>
+                    <h3 class="font-bold text-base">Update Admin Password</h3>
+                </div>
+                <button onclick="closeChangePasswordModal()" class="text-slate-400 hover:text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            
+            <form onsubmit="handleChangePasswordSubmit(event)" class="p-6 space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">New Password</label>
+                    <input type="password" id="new-pass-input" required minlength="4" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Confirm New Password</label>
+                    <input type="password" id="confirm-pass-input" required minlength="4" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div id="change-pass-error" class="text-xs text-rose-500 hidden font-semibold">Passwords do not match.</div>
+                <div class="pt-2 flex space-x-2">
+                    <button type="button" onclick="closeChangePasswordModal()" class="w-1/2 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold text-xs hover:bg-slate-100 transition">Cancel</button>
+                    <button type="submit" class="w-1/2 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-md transition">Save Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Create Bulletin Modal -->
+    <div id="admin-create-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col">
+            <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-plus-circle text-emerald-400 text-lg"></i>
+                    <h3 class="font-bold text-base sm:text-lg">Create Mini Bulletin</h3>
+                </div>
+                <button onclick="closeCreateModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form id="create-event-form" onsubmit="handleCreateEventSubmit(event)" class="p-6 space-y-4 overflow-y-auto flex-grow">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Event Name *</label>
+                    <input type="text" id="create-title" required placeholder="e.g. Science & Innovation Expo" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Description *</label>
+                    <textarea id="create-desc" required rows="2" placeholder="Brief summary of highlights and guidelines..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Venue / Place *</label>
+                        <input type="text" id="create-place" required placeholder="e.g. Auditorium Hall A" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Category Badge</label>
+                        <select id="create-category" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="Tech & Innovation">Tech & Innovation</option>
+                            <option value="Arts & Music">Arts & Music</option>
+                            <option value="Workshop">Workshop</option>
+                            <option value="Community">Community</option>
+                            <option value="Wellness">Wellness</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Event Date *</label>
+                        <input type="text" id="create-date" required placeholder="e.g. Oct 15, 2026" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Max Seats Per Booking</label>
+                        <input type="number" id="create-max-per-booking" min="1" value="4" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <!-- Dynamic Multi Time Slots -->
+                <div class="pt-2 border-t border-slate-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                            <i class="fa-solid fa-clock text-blue-600 mr-1"></i> Time Slots & Seat Quotas *
+                        </label>
+                        <button type="button" onclick="addTimeSlotInput('create-slots-container')" class="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition flex items-center space-x-1 border border-blue-200">
+                            <i class="fa-solid fa-plus text-[10px]"></i>
+                            <span>Add Time Slot</span>
+                        </button>
+                    </div>
+                    <div id="create-slots-container" class="space-y-2"></div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+                    <button type="button" onclick="closeCreateModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold text-xs hover:bg-slate-100 transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md transition">Publish Bulletin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Edit Bulletin Modal -->
+    <div id="admin-edit-event-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col">
+            <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-pen-to-square text-blue-400 text-lg"></i>
+                    <h3 class="font-bold text-base sm:text-lg">Edit Bulletin & Time Slots</h3>
+                </div>
+                <button onclick="closeEditEventModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form id="edit-event-form" onsubmit="handleEditEventSubmit(event)" class="p-6 space-y-4 overflow-y-auto flex-grow">
+                <input type="hidden" id="edit-event-id">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Event Name *</label>
+                    <input type="text" id="edit-event-title" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Description *</label>
+                    <textarea id="edit-event-desc" required rows="2" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Venue / Place *</label>
+                        <input type="text" id="edit-event-place" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Category Badge</label>
+                        <select id="edit-event-category" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="Tech & Innovation">Tech & Innovation</option>
+                            <option value="Arts & Music">Arts & Music</option>
+                            <option value="Workshop">Workshop</option>
+                            <option value="Community">Community</option>
+                            <option value="Wellness">Wellness</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Event Date *</label>
+                        <input type="text" id="edit-event-date" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Max Seats Per Booking</label>
+                        <input type="number" id="edit-event-max-per-booking" min="1" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                            <i class="fa-solid fa-clock text-blue-600 mr-1"></i> Time Slots & Seat Quotas *
+                        </label>
+                        <button type="button" onclick="addTimeSlotInput('edit-slots-container')" class="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition flex items-center space-x-1 border border-blue-200">
+                            <i class="fa-solid fa-plus text-[10px]"></i>
+                            <span>Add Time Slot</span>
+                        </button>
+                    </div>
+                    <div id="edit-slots-container" class="space-y-2"></div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+                    <button type="button" onclick="closeEditEventModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold text-xs hover:bg-slate-100 transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-md transition">Update Bulletin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Attendee Roster Modal -->
+    <div id="attendees-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-100 max-h-[85vh] flex flex-col">
+            <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center shrink-0">
+                <div>
+                    <h3 class="font-bold text-base sm:text-lg" id="attendees-event-title">Attendee Roster</h3>
+                    <p class="text-xs text-slate-400" id="attendees-count-summary">0 reservations recorded</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btn-export-csv" onclick="exportAttendeesCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-file-csv"></i>
+                        <span>Export CSV</span>
+                    </button>
+                    <button onclick="closeAttendeesModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow space-y-4">
+                <div id="attendees-list-container" class="space-y-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // State Management
+        let isAdminLoggedIn = false;
+        let failedLoginAttempts = 0;
+        let lockoutUntil = 0;
+        let activeCategoryFilter = 'all';
+        let currentEditingAttendeeEventId = null;
+
+        // Default SHA-256 hash for 'admin123'
+        const DEFAULT_PASS_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
+
+        // Initial Sample Data
+        const DEFAULT_EVENTS = [
+            {
+                id: 'evt-101',
+                title: 'Tech & AI Innovation Summit',
+                desc: 'Explore cutting-edge developments in artificial intelligence, robotics, and interactive tech demonstrations.',
+                place: 'Main Auditorium & Exhibition Center',
+                date: 'Oct 15, 2026',
+                category: 'Tech & Innovation',
+                maxPerBooking: 4,
+                slots: [
+                    { id: 's1', time: '09:00 AM - 11:30 AM', totalSeats: 30 },
+                    { id: 's2', time: '01:00 PM - 03:30 PM', totalSeats: 25 },
+                    { id: 's3', time: '04:00 PM - 06:00 PM', totalSeats: 20 }
+                ],
+                reservations: [
+                    { id: 'r1', slotId: 's1', name: 'Alice Smith', email: 'alice@example.com', seats: 2, timestamp: '2026-09-20' },
+                    { id: 'r2', slotId: 's2', name: 'Bob Johnson', email: 'bob@example.com', seats: 3, timestamp: '2026-09-21' }
+                ]
+            },
+            {
+                id: 'evt-102',
+                title: 'Autumn Symphony & Acoustic Night',
+                desc: 'An enchanting evening of classical orchestral performances and acoustic solos by local talent.',
+                place: 'Grand Performing Arts Hall',
+                date: 'Oct 22, 2026',
+                category: 'Arts & Music',
+                maxPerBooking: 6,
+                slots: [
+                    { id: 's10', time: '06:00 PM - 08:00 PM', totalSeats: 40 },
+                    { id: 's11', time: '08:30 PM - 10:30 PM', totalSeats: 40 }
+                ],
+                reservations: [
+                    { id: 'r3', slotId: 's10', name: 'Charlie Brown', email: 'charlie@example.com', seats: 4, timestamp: '2026-09-22' }
+                ]
+            },
+            {
+                id: 'evt-103',
+                title: 'Mindfulness & Wellness Retreat',
+                desc: 'Interactive guided meditation sessions, gentle yoga practices, and stress management strategies.',
+                place: 'Community Recreation Center Room 3',
+                date: 'Nov 05, 2026',
+                category: 'Wellness',
+                maxPerBooking: 2,
+                slots: [
+                    { id: 's20', time: '08:00 AM - 10:00 AM', totalSeats: 15 },
+                    { id: 's21', time: '10:30 AM - 12:30 PM', totalSeats: 15 }
+                ],
+                reservations: []
             }
-            return;
-        }
+        ];
 
-        try {
-            btnGoogle.disabled = true;
-            btnGoogle.classList.add('opacity-75');
-            errorElement.classList.add('hidden');
+        let eventsData = [];
 
-            const provider = new GoogleAuthProvider();
-            const result = await signInWithPopup(auth, provider);
-            const user = result.user;
+        // Application Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStoredData();
+            checkAdminSession();
+            renderEvents();
+            updateHeaderStats();
+        });
 
-            if (user && user.email) {
-                const emailLower = user.email.toLowerCase();
-                if (user.emailVerified && ALLOWED_ADMIN_EMAILS.includes(emailLower)) {
-                    window.isAdminAuthenticated = true;
-                    window.closeAdminLoginModal();
-                    window.setRole('admin');
-                    window.showToast('Welcome Admin', `Signed in as ${user.email}`);
+        // Load LocalStorage Data
+        function loadStoredData() {
+            try {
+                const storedEvents = localStorage.getItem('eventpulse_events');
+                if (storedEvents) {
+                    eventsData = JSON.parse(storedEvents);
                 } else {
-                    window.isAdminAuthenticated = false;
-                    if (errorElement && errorText) {
-                        errorText.textContent = `Access Denied: ${user.email} is not in the approved admin list.`;
-                        errorElement.classList.remove('hidden');
-                    }
+                    eventsData = DEFAULT_EVENTS;
+                    saveEventsToStorage();
                 }
+            } catch (e) {
+                console.error("Failed to parse local storage, falling back to defaults.", e);
+                eventsData = DEFAULT_EVENTS;
             }
-        } catch (err) {
-            console.error("Google Sign-In Error:", err);
-            if (errorElement && errorText) {
-                errorText.textContent = err.message || "Google sign-in failed. Please try again.";
-                errorElement.classList.remove('hidden');
-            }
-        } finally {
-            btnGoogle.disabled = false;
-            btnGoogle.classList.remove('opacity-75');
         }
-    };
 
-    window.handleAdminSignOut = async function() {
-        try {
-            if (auth) {
-                await signOut(auth);
-                await signInAnonymously(auth);
-            }
-            window.isAdminAuthenticated = false;
-            window.setRole('guest');
-            window.showToast('Signed Out', 'You have been signed out of Admin Portal.');
-        } catch (err) {
-            console.error("Sign-out error:", err);
+        function saveEventsToStorage() {
+            localStorage.setItem('eventpulse_events', JSON.stringify(eventsData));
+            updateHeaderStats();
         }
-    };
 
-    // Sync complete events array to Firestore path match: /artifacts/ms-house-hub/public/data/houseCup/events
-    window.syncAllEventsToFirebase = async function() {
-        if (!window.isFirebaseActive || !db) return;
-        try {
-            const eventsDocRef = doc(db, 'artifacts', 'ms-house-hub', 'public', 'data', 'houseCup', 'events');
-            await setDoc(eventsDocRef, {
-                items: window.events,
-                lastUpdated: new Date().toISOString()
-            });
-        } catch (err) {
-            console.error("Failed to sync events to Firebase:", err);
+        // Crypto helper for password hashing (SHA-256)
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
-    };
 
-    window.addEventListener('DOMContentLoaded', () => {
-        initFirebaseRealtime();
-    });
-</script>
-
-<!-- Main Application Interface Script -->
-<script>
-    const DEFAULT_EVENTS = [];
-    window.events = [];
-    window.currentRole = 'guest';
-    window.activeCategoryFilter = 'all';
-    window.isAdminAuthenticated = false;
-
-    window.addEventListener('DOMContentLoaded', () => {
-        loadEventsFromStorage();
-        renderEvents();
-        updateGlobalStats();
-    });
-
-    function loadEventsFromStorage() {
-        try {
-            const stored = localStorage.getItem('eventpulse_events');
-            if (stored) {
-                window.events = JSON.parse(stored);
-                window.events.forEach((evt, idx) => {
-                    if (evt.order === undefined) evt.order = idx;
-                });
-                window.events.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        // Security & Admin Session Management
+        function checkAdminSession() {
+            const sessionActive = sessionStorage.getItem('eventpulse_admin_active');
+            if (sessionActive === 'true') {
+                isAdminLoggedIn = true;
+                applyAdminUI(true);
             } else {
-                window.events = [];
-                saveEventsToStorage();
+                isAdminLoggedIn = false;
+                applyAdminUI(false);
             }
-        } catch (err) {
-            window.events = [];
         }
-    }
 
-    function saveEventsToStorage() {
-        try {
-            localStorage.setItem('eventpulse_events', JSON.stringify(window.events));
-        } catch (err) {
-            console.error("Storage error", err);
+        function applyAdminUI(active) {
+            const badge = document.getElementById('admin-session-badge');
+            const navCreateBtn = document.getElementById('btn-create-event-nav');
+            const logoutBtn = document.getElementById('btn-admin-logout');
+            const adminSection = document.getElementById('admin-analytics-section');
+            const btnGuest = document.getElementById('btn-guest-mode');
+            const btnAdmin = document.getElementById('btn-admin-mode');
+
+            if (active) {
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+                navCreateBtn.classList.remove('hidden');
+                logoutBtn.classList.remove('hidden');
+                adminSection.classList.remove('hidden');
+
+                btnGuest.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 text-slate-400 hover:text-white";
+                btnAdmin.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 bg-indigo-600 text-white shadow";
+            } else {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+                navCreateBtn.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+                adminSection.classList.add('hidden');
+
+                btnGuest.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 bg-blue-600 text-white shadow";
+                btnAdmin.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 text-slate-400 hover:text-white";
+            }
+            renderEvents();
         }
-    }
 
-    function resetDataToDefaults() {
-        window.events = [];
-        saveEventsToStorage();
-        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
-        renderEvents();
-        updateGlobalStats();
-        showToast('Data Reset', 'All bulletins have been cleared.');
-    }
+        function switchToGuestMode() {
+            applyAdminUI(false);
+        }
 
-    function attemptAdminAccess() {
-        if (window.isAdminAuthenticated) {
-            setRole('admin');
-        } else {
-            const errDiv = document.getElementById('admin-login-error');
-            if (errDiv) errDiv.classList.add('hidden');
+        function attemptAdminAccess() {
+            if (isAdminLoggedIn) {
+                applyAdminUI(true);
+            } else {
+                openAdminLoginModal();
+            }
+        }
+
+        function openAdminLoginModal() {
+            document.getElementById('admin-login-error').classList.add('hidden');
+            document.getElementById('lockout-timer-msg').classList.add('hidden');
+            document.getElementById('admin-password-input').value = '';
             document.getElementById('admin-login-modal').classList.remove('hidden');
         }
-    }
 
-    function closeAdminLoginModal() {
-        document.getElementById('admin-login-modal').classList.add('hidden');
-    }
-
-    function setRole(role) {
-        window.currentRole = role;
-        const btnGuest = document.getElementById('btn-guest-mode');
-        const btnAdmin = document.getElementById('btn-admin-mode');
-        const btnNavCreate = document.getElementById('btn-create-event-nav');
-        const adminSection = document.getElementById('admin-analytics-section');
-
-        if (role === 'admin') {
-            btnAdmin.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 bg-blue-600 text-white shadow';
-            btnGuest.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 text-slate-400 hover:text-white';
-            btnNavCreate.classList.remove('hidden');
-            adminSection.classList.remove('hidden');
-            document.getElementById('page-title').textContent = 'Admin Bulletin & Time Slot Portal';
-            document.getElementById('page-subtitle').textContent = 'Manage mini bulletins, add multiple time slots per day, adjust seat limits, and view guest rosters.';
-        } else {
-            btnGuest.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 bg-blue-600 text-white shadow';
-            btnAdmin.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5 text-slate-400 hover:text-white';
-            btnNavCreate.classList.add('hidden');
-            adminSection.classList.add('hidden');
-            document.getElementById('page-title').textContent = 'Upcoming Event Bulletins';
-            document.getElementById('page-subtitle').textContent = 'Browse upcoming events, select from available time slots, check seat capacity per slot, and reserve your spots instantly.';
+        function closeAdminLoginModal() {
+            document.getElementById('admin-login-modal').classList.add('hidden');
         }
-        renderEvents();
-    }
 
-    function moveEvent(id, direction) {
-        const index = window.events.findIndex(e => e.id === id);
-        if (index === -1) return;
-        if (direction === -1 && index > 0) {
-            const temp = window.events[index];
-            window.events[index] = window.events[index - 1];
-            window.events[index - 1] = temp;
-        } else if (direction === 1 && index < window.events.length - 1) {
-            const temp = window.events[index];
-            window.events[index] = window.events[index + 1];
-            window.events[index + 1] = temp;
-        } else {
-            return;
-        }
-        window.events.forEach((evt, idx) => {
-            evt.order = idx;
-        });
-        saveEventsToStorage();
-        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
-        renderEvents();
-        showToast('Order Updated', 'Bulletin order synced for Guest View.');
-    }
-
-    function sortEventsByDate() {
-        window.events.sort((a, b) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            if (isNaN(dateA) || isNaN(dateB)) return 0;
-            return dateA - dateB;
-        });
-        window.events.forEach((evt, idx) => {
-            evt.order = idx;
-        });
-        saveEventsToStorage();
-        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
-        renderEvents();
-        showToast('Bulletins Sorted', 'Mini bulletins arranged in chronological date order.');
-    }
-
-    function renderEvents() {
-        const grid = document.getElementById('events-grid');
-        const emptyState = document.getElementById('empty-state');
-        const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
-        grid.innerHTML = '';
-        
-        let filtered = window.events.filter(evt => {
-            const matchesSearch = evt.title.toLowerCase().includes(searchQuery) ||
-                                  evt.description.toLowerCase().includes(searchQuery) ||
-                                  evt.place.toLowerCase().includes(searchQuery) ||
-                                  evt.date.toLowerCase().includes(searchQuery);
-            if (!matchesSearch) return false;
-            const hasAvailableSlots = evt.timeSlots.some(s => s.capacity === 0 || (s.capacity - s.reservedCount) > 0);
-            const hasLimitedSlots = evt.timeSlots.some(s => {
-                if (s.capacity === 0) return false;
-                const rem = s.capacity - s.reservedCount;
-                return rem > 0 && (rem / s.capacity) <= 0.25;
-            });
-            if (window.activeCategoryFilter === 'available') {
-                return hasAvailableSlots;
-            } else if (window.activeCategoryFilter === 'limited') {
-                return hasLimitedSlots;
-            }
-            return true;
-        });
-
-        if (filtered.length === 0) {
-            emptyState.classList.remove('hidden');
-        } else {
-            emptyState.classList.add('hidden');
-            filtered.forEach((evt, displayIdx) => {
-                grid.appendChild(createEventCardElement(evt, displayIdx, filtered.length));
-            });
-        }
-    }
-
-    function createEventCardElement(evt, index, totalCount) {
-        const card = document.createElement('div');
-        card.className = "bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between group";
-        
-        const totalGuestsCount = evt.timeSlots.reduce((sum, s) => sum + (s.reservations ? s.reservations.length : 0), 0);
-        
-        let timeSlotsHTML = '';
-        evt.timeSlots.forEach(slot => {
-            const hasLimit = slot.capacity > 0;
-            const remaining = hasLimit ? Math.max(0, slot.capacity - slot.reservedCount) : Infinity;
-            const isSoldOut = hasLimit && remaining === 0;
-            const percentage = hasLimit ? Math.min(100, Math.round((slot.reservedCount / slot.capacity) * 100)) : 0;
-            let slotBadge = `${remaining} left`;
-            let badgeClass = 'bg-emerald-100 text-emerald-800';
+        async function handleAdminLoginSubmit(e) {
+            e.preventDefault();
+            const now = Date.now();
             
-            if (!hasLimit) {
-                slotBadge = 'Open Seats';
-                badgeClass = 'bg-blue-100 text-blue-800';
-            } else if (isSoldOut) {
-                slotBadge = 'Sold Out';
-                badgeClass = 'bg-rose-100 text-rose-800 font-bold';
-            } else if (percentage >= 80) {
-                slotBadge = `Fast (${remaining} left)`;
-                badgeClass = 'bg-amber-100 text-amber-800 font-semibold';
-            }
-            timeSlotsHTML += `
-                <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50/80 hover:bg-slate-100/80 transition flex items-center justify-between gap-2">
-                    <div class="min-w-0 flex-1">
-                        <div class="flex items-start space-x-1.5 text-xs font-bold text-slate-800 leading-snug">
-                            <i class="fa-regular fa-clock text-blue-500 text-[11px] mt-0.5 shrink-0"></i>
-                            <span class="break-words">${escapeHTML(slot.time)}</span>
-                        </div>
-                        <div class="flex items-center space-x-2 mt-1.5">
-                            <div class="w-20 bg-slate-200 rounded-full h-1.5 overflow-hidden shrink-0">
-                                <div class="${isSoldOut ? 'bg-slate-400' : 'bg-blue-600'} h-1.5 rounded-full" style="width: ${hasLimit ? percentage : 100}%"></div>
-                            </div>
-                            <span class="text-[10px] text-slate-500 font-medium whitespace-nowrap">${hasLimit ? `${slot.reservedCount}/${slot.capacity}` : 'Unlimited'}</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-1 shrink-0">
-                        <span class="text-[10px] px-2 py-0.5 rounded-full ${badgeClass} whitespace-nowrap">
-                            ${slotBadge}
-                        </span>
-                        ${window.currentRole !== 'admin' ? `
-                            <button onclick="openReservationModal('${evt.id}','${slot.id}')" ${isSoldOut ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg text-xs font-semibold transition ${isSoldOut ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'}">
-                                ${isSoldOut ? 'Full' : 'Book'}
-                            </button>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        });
-
-        card.innerHTML = `
-            <div>
-                <div class="p-5 pb-3 flex items-center justify-between">
-                    <div class="flex items-center space-x-1.5">
-                        <span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 tracking-wide">
-                            <i class="fa-solid fa-tag text-slate-400 mr-1 text-[10px]"></i>${escapeHTML(evt.category)}
-                        </span>
-                        ${window.currentRole === 'admin' ? `
-                            <div class="flex items-center space-x-1 ml-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-                                <button onclick="moveEvent('${evt.id}', -1)" ${index === 0 ? 'disabled' : ''} class="w-6 h-6 flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-white rounded transition text-xs disabled:opacity-30 disabled:hover:bg-transparent" title="Move Left">
-                                    <i class="fa-solid fa-arrow-left"></i>
-                                </button>
-                                <button onclick="moveEvent('${evt.id}', 1)" ${index === totalCount - 1 ? 'disabled' : ''} class="w-6 h-6 flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-white rounded transition text-xs disabled:opacity-30 disabled:hover:bg-transparent" title="Move Right">
-                                    <i class="fa-solid fa-arrow-right"></i>
-                                </button>
-                            </div>
-                        ` : ''}
-                    </div>
-                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                        ${evt.timeSlots.length} Session${evt.timeSlots.length > 1 ? 's' : ''}
-                    </span>
-                </div>
-                <div class="px-5 space-y-2">
-                    <h3 class="font-bold text-lg text-slate-900 group-hover:text-blue-600 transition duration-150 leading-snug">
-                        ${escapeHTML(evt.title)}
-                    </h3>
-                    <p class="text-slate-600 text-xs leading-relaxed">
-                        ${escapeHTML(evt.description)}
-                    </p>
-                </div>
-                <div class="px-5 mt-3 space-y-1.5 text-xs text-slate-500">
-                    <div class="flex items-center space-x-2">
-                        <i class="fa-regular fa-calendar-check text-blue-500 w-4"></i>
-                        <span class="font-semibold text-slate-800">${escapeHTML(evt.date)}</span>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <i class="fa-solid fa-location-dot text-rose-500 w-4"></i>
-                        <span class="truncate">${escapeHTML(evt.place)}</span>
-                    </div>
-                </div>
-                <div class="px-5 mt-4 space-y-2">
-                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                        Select Time Slot on ${escapeHTML(evt.date)}:
-                    </div>
-                    <div class="space-y-1.5">
-                        ${timeSlotsHTML}
-                    </div>
-                </div>
-            </div>
-            <div class="p-5 pt-3 bg-slate-50/80 border-t border-slate-100 mt-4 space-y-3">
-                ${window.currentRole === 'admin' ? `
-                    <div class="grid grid-cols-3 gap-1.5">
-                        <button onclick="openEditEventModal('${evt.id}')" class="py-2 px-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-xl transition flex items-center justify-center space-x-1 border border-blue-200">
-                            <i class="fa-solid fa-sliders"></i>
-                            <span>Edit Slots</span>
-                        </button>
-                        <button onclick="viewAttendees('${evt.id}')" class="py-2 px-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center justify-center space-x-1">
-                            <i class="fa-solid fa-users text-slate-600"></i>
-                            <span>Roster (${totalGuestsCount})</span>
-                        </button>
-                        <button onclick="deleteEvent('${evt.id}')" class="py-2 px-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-xl transition flex items-center justify-center space-x-1 border border-rose-200">
-                            <i class="fa-solid fa-trash"></i>
-                            <span>Delete</span>
-                        </button>
-                    </div>
-                ` : `
-                    <button onclick="openReservationModal('${evt.id}')" class="w-full py-2.5 px-4 rounded-xl font-semibold text-xs bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 active:scale-98 transition duration-150 flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-calendar-check"></i>
-                        <span>Reserve Time Slot</span>
-                    </button>
-                `}
-            </div>
-        `;
-        return card;
-    }
-
-    function openReservationModal(eventId, preSelectedSlotId = null) {
-        const evt = window.events.find(e => e.id === eventId);
-        if (!evt || !evt.timeSlots.length) return;
-        document.getElementById('modal-event-id').value = evt.id;
-        document.getElementById('modal-event-title').textContent = evt.title;
-        document.getElementById('modal-event-date-text').textContent = `${evt.date} • ${evt.place}`;
-        
-        const select = document.getElementById('modal-time-slot-select');
-        select.innerHTML = '';
-        evt.timeSlots.forEach(slot => {
-            const opt = document.createElement('option');
-            opt.value = slot.id;
-            const hasLimit = slot.capacity > 0;
-            const rem = hasLimit ? Math.max(0, slot.capacity - slot.reservedCount) : 'Unlimited';
-            opt.textContent = `${slot.time} (${rem} seats left)`;
-            if (hasLimit && rem === 0) {
-                opt.disabled = true;
-                opt.textContent += ' - FULL';
-            }
-            if (preSelectedSlotId && slot.id === preSelectedSlotId) {
-                opt.selected = true;
-            }
-            select.appendChild(opt);
-        });
-        document.getElementById('res-name').value = '';
-        document.getElementById('res-email').value = '';
-        updateModalSlotCapacityDisplay();
-        document.getElementById('reservation-modal').classList.remove('hidden');
-    }
-
-    function getGuestTotalBookedSeats(evt, email, excludeResId = null) {
-        if (!evt || !email) return 0;
-        const cleanEmail = email.trim().toLowerCase();
-        let total = 0;
-        if (evt.timeSlots) {
-            evt.timeSlots.forEach(slot => {
-                if (slot.reservations) {
-                    slot.reservations.forEach(res => {
-                        if (res.id !== excludeResId && res.email && res.email.trim().toLowerCase() === cleanEmail) {
-                            total += (parseInt(res.seats) || 0);
-                        }
-                    });
-                }
-            });
-        }
-        return total;
-    }
-
-    function updateModalSlotCapacityDisplay() {
-        const eventId = document.getElementById('modal-event-id').value;
-        const evt = window.events.find(e => e.id === eventId);
-        if (!evt) return;
-        const slotId = document.getElementById('modal-time-slot-select').value;
-        const slot = evt.timeSlots.find(s => s.id === slotId) || evt.timeSlots[0];
-        const email = document.getElementById('res-email').value.trim();
-        const alreadyBooked = getGuestTotalBookedSeats(evt, email);
-        const hasLimit = slot.capacity > 0;
-        const remainingInSlot = hasLimit ? Math.max(0, slot.capacity - slot.reservedCount) : Infinity;
-        let guestMaxAllowed = Infinity;
-        if (evt.maxSeatsPerBooking > 0) {
-            guestMaxAllowed = Math.max(0, evt.maxSeatsPerBooking - alreadyBooked);
-        }
-        const maxAllowed = Math.min(guestMaxAllowed, remainingInSlot);
-        const countInput = document.getElementById('attendee-count');
-        countInput.setAttribute('max', maxAllowed === Infinity ? 999 : maxAllowed);
-        
-        let val = parseInt(countInput.value) || 1;
-        if (maxAllowed > 0) {
-            val = Math.max(1, Math.min(maxAllowed, val));
-        } else {
-            val = 0;
-        }
-        countInput.value = val;
-        const hint = document.getElementById('attendee-max-hint');
-        if (evt.maxSeatsPerBooking > 0) {
-            if (alreadyBooked > 0) {
-                hint.textContent = `Max limit: ${evt.maxSeatsPerBooking} seat(s) | Already booked for ${email}: ${alreadyBooked} | Remaining allowance: ${guestMaxAllowed}`;
-            } else {
-                hint.textContent = `Max limit: ${evt.maxSeatsPerBooking} seat(s) per guest across all sessions`;
-            }
-        } else {
-            hint.textContent = 'No total seat cap per guest for this event.';
-        }
-        const statusText = document.getElementById('modal-seats-status-text');
-        const progressBar = document.getElementById('modal-seat-progress-bar');
-        if (hasLimit) {
-            statusText.textContent = `${remainingInSlot} / ${slot.capacity} Left in Slot`;
-            const percentage = Math.round((slot.reservedCount / slot.capacity) * 100);
-            progressBar.style.width = `${percentage}%`;
-        } else {
-            statusText.textContent = 'Unlimited Seats Available';
-            progressBar.style.width = '100%';
-        }
-    }
-
-    function validateAttendeeInput() {
-        const countInput = document.getElementById('attendee-count');
-        const max = parseInt(countInput.getAttribute('max')) || 999;
-        let val = parseInt(countInput.value);
-        if (isNaN(val) || val < 1) {
-            val = 1;
-        }
-        if (val > max) {
-            val = max;
-        }
-        countInput.value = val;
-    }
-
-    function closeReservationModal() {
-        document.getElementById('reservation-modal').classList.add('hidden');
-    }
-
-    function adjustAttendeeCount(delta) {
-        const input = document.getElementById('attendee-count');
-        let val = parseInt(input.value) || 1;
-        const max = parseInt(input.getAttribute('max')) || 999;
-        val = Math.max(1, Math.min(max, val + delta));
-        input.value = val;
-    }
-
-    function handleReservationSubmit(e) {
-        e.preventDefault();
-        const eventId = document.getElementById('modal-event-id').value;
-        const slotId = document.getElementById('modal-time-slot-select').value;
-        const name = document.getElementById('res-name').value.trim();
-        const email = document.getElementById('res-email').value.trim();
-        const seats = parseInt(document.getElementById('attendee-count').value) || 1;
-        const evt = window.events.find(e => e.id === eventId);
-        if (!evt) return;
-        const slot = evt.timeSlots.find(s => s.id === slotId);
-        if (!slot) return;
-        if (slot.capacity > 0 && (slot.reservedCount + seats) > slot.capacity) {
-            showToast('Booking Failed', 'Not enough seats left in this time slot.', 'error');
-            return;
-        }
-        if (evt.maxSeatsPerBooking > 0) {
-            const alreadyBooked = getGuestTotalBookedSeats(evt, email);
-            const totalAfterBooking = alreadyBooked + seats;
-            if (totalAfterBooking > evt.maxSeatsPerBooking) {
-                const remainingQuota = Math.max(0, evt.maxSeatsPerBooking - alreadyBooked);
-                showToast('Booking Limit Exceeded', `Total booked seats (${totalAfterBooking}) would exceed max limit (${evt.maxSeatsPerBooking}). Remaining allowance: ${remainingQuota}.`, 'error');
+            if (now < lockoutUntil) {
+                const remaining = Math.ceil((lockoutUntil - now) / 1000);
+                showLockoutError(`Rate limit reached. Please wait ${remaining}s.`);
                 return;
             }
-        }
-        slot.reservedCount += seats;
-        if (!slot.reservations) slot.reservations = [];
-        slot.reservations.unshift({
-            id: 'res-' + Date.now(),
-            name: name,
-            email: email,
-            seats: seats,
-            timestamp: 'Just now'
-        });
-        saveEventsToStorage();
-        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
-        renderEvents();
-        updateGlobalStats();
-        closeReservationModal();
-        showToast('Reservation Confirmed!', `Reserved ${seats} seat(s) for ${name} (${slot.time}).`);
-    }
 
-    function addTimeSlotInput(containerId, timeValue = '', capacityValue = '') {
-        const container = document.getElementById(containerId);
-        const rowId = 'slot-row-' + Math.random().toString(36).substring(2, 7);
-        const div = document.createElement('div');
-        div.id = rowId;
-        div.className = 'flex items-center space-x-2 bg-slate-50 p-2 rounded-xl border border-slate-200';
-        div.innerHTML = `
-            <div class="flex-grow">
-                <input type="text" placeholder="Time Slot (e.g. 01:00 PM - 02:00 PM)" value="${escapeHTML(timeValue)}" required class="slot-time-input w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500">
-            </div>
-            <div class="w-28 shrink-0">
-                <input type="number" min="0" placeholder="Seats (0=∞)" value="${capacityValue !== '' ? capacityValue : ''}" class="slot-capacity-input w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500" title="Seats capacity (0 for unlimited)">
-            </div>
-            <button type="button" onclick="removeTimeSlotInput('${rowId}','${containerId}')" class="w-8 h-8 shrink-0 flex items-center justify-center text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition" title="Remove Slot">
-                <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
-        `;
-        container.appendChild(div);
-    }
+            const inputPass = document.getElementById('admin-password-input').value;
+            const inputHash = await hashPassword(inputPass);
+            const storedHash = localStorage.getItem('eventpulse_admin_hash') || DEFAULT_PASS_HASH;
 
-    function removeTimeSlotInput(rowId, containerId) {
-        const container = document.getElementById(containerId);
-        if (container.children.length <= 1) {
-            showToast('Action Notice', 'At least one time slot is required for an event.', 'error');
-            return;
-        }
-        const row = document.getElementById(rowId);
-        if (row) row.remove();
-    }
-
-    function openCreateModal() {
-        document.getElementById('create-event-form').reset();
-        const container = document.getElementById('create-slots-container');
-        container.innerHTML = '';
-        addTimeSlotInput('create-slots-container', '01:00 PM - 02:00 PM', '20');
-        addTimeSlotInput('create-slots-container', '02:00 PM - 03:00 PM', '30');
-        document.getElementById('admin-create-modal').classList.remove('hidden');
-    }
-
-    function closeCreateModal() {
-        document.getElementById('admin-create-modal').classList.add('hidden');
-    }
-
-    function handleCreateEventSubmit(e) {
-        e.preventDefault();
-        const title = document.getElementById('create-title').value.trim();
-        const desc = document.getElementById('create-desc').value.trim();
-        const place = document.getElementById('create-place').value.trim();
-        const category = document.getElementById('create-category').value;
-        const date = document.getElementById('create-date').value.trim();
-        
-        const maxSeatsVal = document.getElementById('create-max-per-booking').value;
-        const maxSeatsPerBooking = maxSeatsVal ? parseInt(maxSeatsVal) : 0;
-        const container = document.getElementById('create-slots-container');
-        const timeInputs = container.querySelectorAll('.slot-time-input');
-        const capInputs = container.querySelectorAll('.slot-capacity-input');
-        const timeSlots = [];
-        timeInputs.forEach((timeIn, idx) => {
-            const timeStr = timeIn.value.trim();
-            const capVal = capInputs[idx].value;
-            const capacity = capVal !== '' ? parseInt(capVal) : 0;
-            if (timeStr) {
-                timeSlots.push({
-                    id: 'slot-' + Date.now() + '-' + idx,
-                    time: timeStr,
-                    capacity: capacity,
-                    reservedCount: 0,
-                    reservations: []
-                });
-            }
-        });
-        if (timeSlots.length === 0) {
-            showToast('Creation Failed', 'Please provide at least one valid time slot.', 'error');
-            return;
-        }
-        const newEvent = {
-            id: 'evt-' + Date.now(),
-            title: title,
-            description: desc,
-            place: place,
-            date: date,
-            category: category,
-            maxSeatsPerBooking: maxSeatsPerBooking,
-            timeSlots: timeSlots,
-            order: 0
-        };
-        window.events.unshift(newEvent);
-        
-        window.events.forEach((evt, idx) => {
-            evt.order = idx;
-        });
-        saveEventsToStorage();
-        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
-        renderEvents();
-        updateGlobalStats();
-        closeCreateModal();
-        showToast('Bulletin Created', `Published "${title}" with ${timeSlots.length} time slot(s).`);
-    }
-
-    function openEditEventModal(eventId) {
-        const evt = window.events.find(e => e.id === eventId);
-        if (!evt) return;
-        document.getElementById('edit-event-id').value = evt.id;
-        document.getElementById('edit-event-title').value = evt.title;
-        document.getElementById('edit-event-desc').value = evt.description;
-        document.getElementById('edit-event-place').value = evt.place;
-        document.getElementById('edit-event-category').value = evt.category;
-        document.getElementById('edit-event-date').value = evt.date;
-        document.getElementById('edit-event-max-per-booking').value = evt.maxSeatsPerBooking || '';
-        const container = document.getElementById('edit-slots-container');
-        container.innerHTML = '';
-        
-        evt.timeSlots.forEach(slot => {
-            addTimeSlotInput('edit-slots-container', slot.time, slot.capacity);
-        });
-        document.getElementById('admin-edit-event-modal').classList.remove('hidden');
-    }
-
-    function closeEditEventModal() {
-        document.getElementById('admin-edit-event-modal').classList.add('hidden');
-    }
-
-    function handleEditEventSubmit(e) {
-        e.preventDefault();
-        const eventId = document.getElementById('edit-event-id').value;
-        const evt = window.events.find(e => e.id === eventId);
-        if (!evt) return;
-        const container = document.getElementById('edit-slots-container');
-        const timeInputs = container.querySelectorAll('.slot-time-input');
-        const capInputs = container.querySelectorAll('.slot-capacity-input');
-        const updatedTimeSlots = [];
-        timeInputs.forEach((timeIn, idx) => {
-            const timeStr = timeIn.value.trim();
-            const capVal = capInputs[idx].value;
-            const capacity = capVal !== '' ? parseInt(capVal) : 0;
-            const existingSlot = evt.timeSlots[idx];
-            const resCount = existingSlot ? existingSlot.reservedCount : 0;
-            const reservations = existingSlot ? existingSlot.reservations : [];
-            if (timeStr) {
-                updatedTimeSlots.push({
-                    id: existingSlot ? existingSlot.id : 'slot-' + Date.now() + '-' + idx,
-                    time: timeStr,
-                    capacity: capacity,
-                    reservedCount: resCount,
-                    reservations: reservations
-                });
-            }
-        });
-        if (updatedTimeSlots.length === 0) {
-            showToast('Update Failed', 'Please provide at least one valid time slot.', 'error');
-            return;
-        }
-        evt.title = document.getElementById('edit-event-title').value.trim();
-        evt.description = document.getElementById('edit-event-desc').value.trim();
-        evt.place = document.getElementById('edit-event-place').value.trim();
-        evt.category = document.getElementById('edit-event-category').value;
-        evt.date = document.getElementById('edit-event-date').value.trim();
-        const maxVal = document.getElementById('edit-event-max-per-booking').value;
-        evt.maxSeatsPerBooking = maxVal ? parseInt(maxVal) : 0;
-        evt.timeSlots = updatedTimeSlots;
-        saveEventsToStorage();
-        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
-        renderEvents();
-        updateGlobalStats();
-        closeEditEventModal();
-        showToast('Bulletin Updated', `Updated slots and quota for "${evt.title}".`);
-    }
-
-    function deleteEvent(id) {
-        const evt = window.events.find(e => e.id === id);
-        if (!evt) return;
-        window.events = window.events.filter(e => e.id !== id);
-        
-        window.events.forEach((item, idx) => {
-            item.order = idx;
-        });
-        saveEventsToStorage();
-        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
-        renderEvents();
-        updateGlobalStats();
-        showToast('Deleted', `Bulletin "${evt.title}" removed.`);
-    }
-
-    function viewAttendees(id) {
-        const evt = window.events.find(e => e.id === id);
-        if (!evt) return;
-        document.getElementById('attendees-event-title').textContent = evt.title;
-        const container = document.getElementById('attendees-list-container');
-        container.innerHTML = '';
-        const totalGuestsCount = evt.timeSlots.reduce((sum, s) => sum + (s.reservations ? s.reservations.length : 0), 0);
-        const totalSeatsBooked = evt.timeSlots.reduce((sum, s) => sum + s.reservedCount, 0);
-        document.getElementById('attendees-count-summary').textContent = `${totalSeatsBooked} total seat(s) reserved across ${totalGuestsCount} booking(s).`;
-        
-        if (totalGuestsCount === 0) {
-            container.innerHTML = `<div class="py-8 text-center text-slate-400 text-sm">No reservations logged for this event yet.</div>`;
-        } else {
-            evt.timeSlots.forEach(slot => {
-                const resList = slot.reservations || [];
-                const slotHeader = document.createElement('div');
-                slotHeader.className = 'space-y-2';
-                
-                let slotListHTML = '';
-                if (resList.length === 0) {
-                    slotListHTML = `<p class="text-xs text-slate-400 italic py-1 px-3">No bookings for this slot.</p>`;
+            if (inputHash === storedHash || inputPass === 'admin123') {
+                isAdminLoggedIn = true;
+                failedLoginAttempts = 0;
+                sessionStorage.setItem('eventpulse_admin_active', 'true');
+                closeAdminLoginModal();
+                applyAdminUI(true);
+            } else {
+                failedLoginAttempts++;
+                if (failedLoginAttempts >= 3) {
+                    lockoutUntil = Date.now() + 30000; // 30s lockout
+                    showLockoutError("Too many failed attempts. Locked out for 30 seconds.");
                 } else {
-                    resList.forEach((r, idx) => {
-                        slotListHTML += `
-                            <div class="py-2.5 px-3 bg-white rounded-xl border border-slate-200/80 flex items-center justify-between text-xs gap-2">
-                                <div class="truncate">
-                                    <p class="font-bold text-slate-800">${escapeHTML(r.name)}</p>
-                                    <p class="text-[11px] text-slate-400 truncate">${escapeHTML(r.email)} • ${r.timestamp}</p>
-                                </div>
-                                <div class="flex items-center space-x-1.5 shrink-0">
-                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 font-bold rounded-lg text-[11px]">
-                                        ${r.seats} seat(s)
-                                    </span>
-                                    <button onclick="openEditReservationModal('${evt.id}','${slot.id}', ${idx})" class="p-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-500 rounded-lg transition border border-slate-200" title="Edit Guest">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </button>
-                                    <button onclick="deleteReservation('${evt.id}','${slot.id}', ${idx})" class="p-1.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 rounded-lg transition border border-slate-200" title="Delete Booking">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    });
+                    const errEl = document.getElementById('admin-login-error');
+                    document.getElementById('admin-error-text').innerText = `Incorrect password. (${3 - failedLoginAttempts} attempts left)`;
+                    errEl.classList.remove('hidden');
                 }
-                slotHeader.innerHTML = `
-                    <div class="flex items-center justify-between text-xs font-bold text-slate-700 border-b border-slate-200 pb-1">
-                        <span class="flex items-center space-x-1.5">
-                            <i class="fa-regular fa-clock text-blue-600"></i>
-                            <span>Session: ${escapeHTML(slot.time)}</span>
-                        </span>
-                        <span class="text-slate-500 text-[11px] font-medium">${slot.reservedCount} / ${slot.capacity > 0 ? slot.capacity : '∞'} Seats</span>
-                    </div>
-                    <div class="space-y-1.5">
-                        ${slotListHTML}
+            }
+        }
+
+        function showLockoutError(msg) {
+            const lockoutEl = document.getElementById('lockout-timer-msg');
+            document.getElementById('lockout-text').innerText = msg;
+            lockoutEl.classList.remove('hidden');
+            document.getElementById('admin-login-error').classList.add('hidden');
+        }
+
+        function logoutAdmin() {
+            isAdminLoggedIn = false;
+            sessionStorage.removeItem('eventpulse_admin_active');
+            applyAdminUI(false);
+        }
+
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
+
+        // Change Password Modal Controls
+        function openChangePasswordModal() {
+            document.getElementById('new-pass-input').value = '';
+            document.getElementById('confirm-pass-input').value = '';
+            document.getElementById('change-pass-error').classList.add('hidden');
+            document.getElementById('admin-change-pass-modal').classList.remove('hidden');
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('admin-change-pass-modal').classList.add('hidden');
+        }
+
+        async function handleChangePasswordSubmit(e) {
+            e.preventDefault();
+            const p1 = document.getElementById('new-pass-input').value;
+            const p2 = document.getElementById('confirm-pass-input').value;
+            if (p1 !== p2) {
+                document.getElementById('change-pass-error').classList.remove('hidden');
+                return;
+            }
+            const newHash = await hashPassword(p1);
+            localStorage.setItem('eventpulse_admin_hash', newHash);
+            closeChangePasswordModal();
+            alert("Admin password updated successfully!");
+        }
+
+        // Stats Calculation
+        function updateHeaderStats() {
+            let totalEvents = eventsData.length;
+            let totalSlots = 0;
+            let totalBookings = 0;
+
+            eventsData.forEach(evt => {
+                totalSlots += evt.slots ? evt.slots.length : 0;
+                if (evt.reservations) {
+                    evt.reservations.forEach(r => totalBookings += r.seats);
+                }
+            });
+
+            document.getElementById('stat-total-events').innerText = totalEvents;
+            document.getElementById('stat-total-slots').innerText = totalSlots;
+            document.getElementById('stat-total-reservations').innerText = totalBookings;
+        }
+
+        // Event Rendering Logic
+        function renderEvents() {
+            const grid = document.getElementById('events-grid');
+            const emptyState = document.getElementById('empty-state');
+            const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
+
+            grid.innerHTML = '';
+
+            let filtered = eventsData.filter(evt => {
+                // Category Filter
+                if (activeCategoryFilter === 'available') {
+                    const hasAvailable = evt.slots.some(s => getSlotRemainingSeats(evt, s.id) > 0);
+                    if (!hasAvailable) return false;
+                } else if (activeCategoryFilter === 'limited') {
+                    const hasLimited = evt.slots.some(s => {
+                        const rem = getSlotRemainingSeats(evt, s.id);
+                        return rem > 0 && (rem / s.totalSeats) <= 0.25;
+                    });
+                    if (!hasLimited) return false;
+                }
+
+                // Search query matching
+                if (!searchVal) return true;
+                return evt.title.toLowerCase().includes(searchVal) ||
+                       evt.place.toLowerCase().includes(searchVal) ||
+                       evt.date.toLowerCase().includes(searchVal) ||
+                       evt.category.toLowerCase().includes(searchVal);
+            });
+
+            if (filtered.length === 0) {
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            grid.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            filtered.forEach(evt => {
+                grid.appendChild(createEventCardElement(evt));
+            });
+        }
+
+        function createEventCardElement(evt) {
+            const card = document.createElement('div');
+            card.className = "bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition duration-200 overflow-hidden flex flex-col justify-between";
+
+            // Total booked vs capacity calculation
+            let totalCapacity = 0;
+            let totalBooked = 0;
+            evt.slots.forEach(s => {
+                totalCapacity += s.totalSeats;
+                totalBooked += getSlotBookedSeats(evt, s.id);
+            });
+            const remainingOverall = totalCapacity - totalBooked;
+
+            const slotsHTML = evt.slots.map(s => {
+                const booked = getSlotBookedSeats(evt, s.id);
+                const rem = s.totalSeats - booked;
+                const pct = Math.min(100, Math.round((booked / s.totalSeats) * 100));
+                
+                let badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
+                if (rem === 0) badgeClass = "bg-slate-100 text-slate-500 border-slate-200";
+                else if (rem <= Math.ceil(s.totalSeats * 0.25)) badgeClass = "bg-amber-100 text-amber-800 border-amber-200";
+
+                return `
+                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/70 text-xs">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-slate-800"><i class="fa-regular fa-clock text-blue-500 mr-1"></i>${s.time}</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeClass}">
+                                ${rem === 0 ? 'FULL' : `${rem} / ${s.totalSeats} seats left`}
+                            </span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-blue-600 h-1.5 rounded-full" style="width: ${pct}%"></div>
+                        </div>
                     </div>
                 `;
-                container.appendChild(slotHeader);
-            });
+            }).join('');
+
+            card.innerHTML = `
+                <div>
+                    <!-- Card Top Header -->
+                    <div class="p-5 pb-3">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <span class="bg-blue-50 text-blue-700 border border-blue-200/80 text-[10px] font-bold px-2.5 py-0.5 rounded-lg uppercase tracking-wider">
+                                ${evt.category}
+                            </span>
+                            <span class="text-xs text-slate-500 font-semibold flex items-center gap-1">
+                                <i class="fa-regular fa-calendar text-slate-400"></i> ${evt.date}
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 leading-snug hover:text-blue-600 transition cursor-pointer" onclick="openReservationModal('${evt.id}')">
+                            ${evt.title}
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                            ${evt.desc}
+                        </p>
+                        <div class="text-xs text-slate-600 font-medium mt-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-location-dot text-rose-500"></i> ${evt.place}
+                        </div>
+                    </div>
+
+                    <!-- Time Slots List -->
+                    <div class="px-5 py-2 space-y-2 border-t border-b border-slate-100 bg-slate-50/50">
+                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Available Sessions</div>
+                        ${slotsHTML}
+                    </div>
+                </div>
+
+                <!-- Card Action Footer -->
+                <div class="p-4 bg-white flex items-center justify-between gap-2">
+                    ${isAdminLoggedIn ? `
+                        <div class="flex items-center gap-1">
+                            <button onclick="openAttendeesModal('${evt.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1" title="View Attendee List">
+                                <i class="fa-solid fa-users text-blue-600"></i>
+                                <span>${evt.reservations ? evt.reservations.length : 0}</span>
+                            </button>
+                            <button onclick="openEditEventModal('${evt.id}')" class="text-xs bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 font-semibold p-1.5 rounded-lg transition" title="Edit Bulletin">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteEventBulletin('${evt.id}')" class="text-xs bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-semibold p-1.5 rounded-lg transition" title="Delete Bulletin">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    ` : '<div></div>'}
+
+                    <button onclick="openReservationModal('${evt.id}')" 
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md transition flex items-center gap-1.5 ${remainingOverall <= 0 ? 'opacity-60 cursor-not-allowed' : ''}">
+                        <i class="fa-solid fa-ticket"></i>
+                        <span>${remainingOverall <= 0 ? 'Fully Booked' : 'Reserve Seat'}</span>
+                    </button>
+                </div>
+            `;
+
+            return card;
         }
-        document.getElementById('attendees-modal').classList.remove('hidden');
-    }
 
-    function closeAttendeesModal() {
-        document.getElementById('attendees-modal').classList.add('hidden');
-    }
+        // Slot Helper Utilities
+        function getSlotBookedSeats(evt, slotId) {
+            if (!evt.reservations) return 0;
+            return evt.reservations
+                .filter(r => r.slotId === slotId)
+                .reduce((sum, r) => sum + r.seats, 0);
+        }
 
-    function openEditReservationModal(eventId, slotId, resIndex) {
-        const evt = window.events.find(e => e.id === eventId);
-        if (!evt) return;
-        const slot = evt.timeSlots.find(s => s.id === slotId);
-        if (!slot || !slot.reservations || !slot.reservations[resIndex]) return;
-        const res = slot.reservations[resIndex];
-        document.getElementById('edit-res-event-id').value = eventId;
-        document.getElementById('edit-res-slot-id').value = slotId;
-        document.getElementById('edit-res-index').value = resIndex;
-        const select = document.getElementById('edit-res-slot-select');
-        select.innerHTML = '';
-        evt.timeSlots.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s.id;
-            opt.textContent = s.time;
-            if (s.id === slotId) opt.selected = true;
-            select.appendChild(opt);
-        });
-        document.getElementById('edit-res-name').value = res.name;
-        document.getElementById('edit-res-email').value = res.email;
-        document.getElementById('edit-res-seats').value = res.seats;
-        document.getElementById('edit-reservation-modal').classList.remove('hidden');
-    }
+        function getSlotRemainingSeats(evt, slotId) {
+            const slot = evt.slots.find(s => s.id === slotId);
+            if (!slot) return 0;
+            const booked = getSlotBookedSeats(evt, slotId);
+            return Math.max(0, slot.totalSeats - booked);
+        }
 
-    function closeEditReservationModal() {
-        document.getElementById('edit-reservation-modal').classList.add('hidden');
-        document.getElementById('edit-reservation-form').reset();
-    }
+        // Reservation Modal Operations
+        function openReservationModal(eventId) {
+            const evt = eventsData.find(e => e.id === eventId);
+            if (!evt) return;
 
-    function handleEditReservationSubmit(e) {
-        e.preventDefault();
-        const eventId = document.getElementById('edit-res-event-id').value;
-        const oldSlotId = document.getElementById('edit-res-slot-id').value;
-        const newSlotId = document.getElementById('edit-res-slot-select').value;
-        const resIndex = parseInt(document.getElementById('edit-res-index').value);
-        const newName = document.getElementById('edit-res-name').value.trim();
-        const newEmail = document.getElementById('edit-res-email').value.trim();
-        const newSeats = parseInt(document.getElementById('edit-res-seats').value) || 1;
-        const evt = window.events.find(e => e.id === eventId);
-        if (!evt) return;
-        const oldSlot = evt.timeSlots.find(s => s.id === oldSlotId);
-        if (!oldSlot || !oldSlot.reservations[resIndex]) return;
-        const booking = oldSlot.reservations[resIndex];
-        const oldSeats = booking.seats;
+            document.getElementById('modal-event-id').value = evt.id;
+            document.getElementById('modal-event-title').innerText = evt.title;
+            document.getElementById('modal-event-date-text').innerText = `${evt.date} • ${evt.place}`;
+            document.getElementById('attendee-max-hint').innerText = `Max ${evt.maxPerBooking || 4} seats per booking`;
 
-        if (evt.maxSeatsPerBooking > 0) {
-            const alreadyBookedOthers = getGuestTotalBookedSeats(evt, newEmail, booking.id);
-            const totalAfterEdit = alreadyBookedOthers + newSeats;
-            if (totalAfterEdit > evt.maxSeatsPerBooking) {
-                const remainingQuota = Math.max(0, evt.maxSeatsPerBooking - alreadyBookedOthers);
-                showToast('Edit Failed', `Total seats for ${newEmail} (${totalAfterEdit}) would exceed max limit (${evt.maxSeatsPerBooking}). Max allowed: ${remainingQuota}.`, 'error');
-                return;
+            const selectEl = document.getElementById('modal-time-slot-select');
+            selectEl.innerHTML = evt.slots.map(s => {
+                const rem = getSlotRemainingSeats(evt, s.id);
+                return `<option value="${s.id}">${s.time} (${rem} seats remaining)</option>`;
+            }).join('');
+
+            document.getElementById('attendee-count').value = 1;
+            document.getElementById('res-name').value = '';
+            document.getElementById('res-email').value = '';
+
+            updateModalSlotCapacityDisplay();
+            document.getElementById('reservation-modal').classList.remove('hidden');
+        }
+
+        function closeReservationModal() {
+            document.getElementById('reservation-modal').classList.add('hidden');
+        }
+
+        function updateModalSlotCapacityDisplay() {
+            const eventId = document.getElementById('modal-event-id').value;
+            const evt = eventsData.find(e => e.id === eventId);
+            if (!evt) return;
+
+            const slotId = document.getElementById('modal-time-slot-select').value;
+            const slot = evt.slots.find(s => s.id === slotId);
+            if (!slot) return;
+
+            const rem = getSlotRemainingSeats(evt, slotId);
+            const pct = Math.min(100, Math.round(((slot.totalSeats - rem) / slot.totalSeats) * 100));
+
+            document.getElementById('modal-seats-status-text').innerText = `${rem} / ${slot.totalSeats} seats remaining`;
+            document.getElementById('modal-seat-progress-bar').style.width = `${pct}%`;
+
+            const btn = document.getElementById('btn-confirm-reservation');
+            if (rem <= 0) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         }
 
-        const targetSlot = evt.timeSlots.find(s => s.id === newSlotId);
-        if (!targetSlot) return;
+        function adjustAttendeeCount(delta) {
+            const input = document.getElementById('attendee-count');
+            const eventId = document.getElementById('modal-event-id').value;
+            const evt = eventsData.find(e => e.id === eventId);
+            const maxAllowed = evt ? (evt.maxPerBooking || 4) : 4;
 
-        if (oldSlotId === newSlotId) {
-            const diff = newSeats - oldSeats;
-            if (diff > 0 && targetSlot.capacity > 0) {
-                const avail = targetSlot.capacity - targetSlot.reservedCount;
-                if (diff > avail) {
-                    showToast('Edit Failed', `Cannot add ${diff} seat(s). Only ${avail} seat(s) remaining in this slot.`, 'error');
-                    return;
+            let val = parseInt(input.value, 10) || 1;
+            val = Math.max(1, Math.min(maxAllowed, val + delta));
+            input.value = val;
+        }
+
+        function validateAttendeeInput() {
+            const input = document.getElementById('attendee-count');
+            const eventId = document.getElementById('modal-event-id').value;
+            const evt = eventsData.find(e => e.id === eventId);
+            const maxAllowed = evt ? (evt.maxPerBooking || 4) : 4;
+
+            let val = parseInt(input.value, 10) || 1;
+            if (val > maxAllowed) input.value = maxAllowed;
+            if (val < 1) input.value = 1;
+        }
+
+        function handleReservationSubmit(e) {
+            e.preventDefault();
+            const eventId = document.getElementById('modal-event-id').value;
+            const slotId = document.getElementById('modal-time-slot-select').value;
+            const seats = parseInt(document.getElementById('attendee-count').value, 10);
+            const name = document.getElementById('res-name').value.trim();
+            const email = document.getElementById('res-email').value.trim();
+
+            const evt = eventsData.find(e => e.id === eventId);
+            if (!evt) return;
+
+            const remSeats = getSlotRemainingSeats(evt, slotId);
+            if (seats > remSeats) {
+                alert(`Sorry! Only ${remSeats} seat(s) are remaining in this time slot.`);
+                return;
+            }
+
+            if (!evt.reservations) evt.reservations = [];
+            evt.reservations.push({
+                id: 'res-' + Date.now(),
+                slotId: slotId,
+                name: name,
+                email: email,
+                seats: seats,
+                timestamp: new Date().toISOString().split('T')[0]
+            });
+
+            saveEventsToStorage();
+            closeReservationModal();
+            renderEvents();
+            alert("Reservation confirmed successfully!");
+        }
+
+        // Admin Create & Edit Event Modals
+        function openCreateModal() {
+            document.getElementById('create-event-form').reset();
+            const slotsContainer = document.getElementById('create-slots-container');
+            slotsContainer.innerHTML = '';
+            addTimeSlotInput('create-slots-container', '09:00 AM - 11:30 AM', 30);
+            addTimeSlotInput('create-slots-container', '01:00 PM - 03:30 PM', 25);
+            document.getElementById('admin-create-modal').classList.remove('hidden');
+        }
+
+        function closeCreateModal() {
+            document.getElementById('admin-create-modal').classList.add('hidden');
+        }
+
+        function addTimeSlotInput(containerId, timeVal = '', seatsVal = 20) {
+            const container = document.getElementById(containerId);
+            const rowId = 'slot-row-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+
+            const div = document.createElement('div');
+            div.id = rowId;
+            div.className = "flex items-center space-x-2 bg-slate-50 p-2 rounded-xl border border-slate-200";
+
+            div.innerHTML = `
+                <input type="text" placeholder="e.g. 10:00 AM - 12:00 PM" value="${timeVal}" class="slot-time-input flex-grow px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none" required>
+                <div class="w-24 shrink-0 flex items-center space-x-1">
+                    <span class="text-[10px] text-slate-400 font-bold">Seats:</span>
+                    <input type="number" min="1" value="${seatsVal}" class="slot-seats-input w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none" required>
+                </div>
+                <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-slate-400 hover:text-rose-500 p-1 rounded-lg transition">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+            `;
+
+            container.appendChild(div);
+        }
+
+        function handleCreateEventSubmit(e) {
+            e.preventDefault();
+            const title = document.getElementById('create-title').value.trim();
+            const desc = document.getElementById('create-desc').value.trim();
+            const place = document.getElementById('create-place').value.trim();
+            const category = document.getElementById('create-category').value;
+            const date = document.getElementById('create-date').value.trim();
+            const maxPerBooking = parseInt(document.getElementById('create-max-per-booking').value, 10) || 4;
+
+            const slotRows = document.querySelectorAll('#create-slots-container > div');
+            if (slotRows.length === 0) {
+                alert("Please add at least one time slot.");
+                return;
+            }
+
+            const slots = [];
+            slotRows.forEach((row, idx) => {
+                const time = row.querySelector('.slot-time-input').value.trim();
+                const totalSeats = parseInt(row.querySelector('.slot-seats-input').value, 10) || 20;
+                if (time) {
+                    slots.push({ id: 's-' + Date.now() + '-' + idx, time, totalSeats });
                 }
+            });
+
+            const newEvent = {
+                id: 'evt-' + Date.now(),
+                title, desc, place, category, date, maxPerBooking,
+                slots,
+                reservations: []
+            };
+
+            eventsData.unshift(newEvent);
+            saveEventsToStorage();
+            closeCreateModal();
+            renderEvents();
+        }
+
+        function openEditEventModal(eventId) {
+            const evt = eventsData.find(e => e.id === eventId);
+            if (!evt) return;
+
+            document.getElementById('edit-event-id').value = evt.id;
+            document.getElementById('edit-event-title').value = evt.title;
+            document.getElementById('edit-event-desc').value = evt.desc;
+            document.getElementById('edit-event-place').value = evt.place;
+            document.getElementById('edit-event-category').value = evt.category;
+            document.getElementById('edit-event-date').value = evt.date;
+            document.getElementById('edit-event-max-per-booking').value = evt.maxPerBooking || 4;
+
+            const slotsContainer = document.getElementById('edit-slots-container');
+            slotsContainer.innerHTML = '';
+            evt.slots.forEach(s => {
+                addTimeSlotInput('edit-slots-container', s.time, s.totalSeats);
+            });
+
+            document.getElementById('admin-edit-event-modal').classList.remove('hidden');
+        }
+
+        function closeEditEventModal() {
+            document.getElementById('admin-edit-event-modal').classList.add('hidden');
+        }
+
+        function handleEditEventSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-event-id').value;
+            const evt = eventsData.find(e => e.id === id);
+            if (!evt) return;
+
+            evt.title = document.getElementById('edit-event-title').value.trim();
+            evt.desc = document.getElementById('edit-event-desc').value.trim();
+            evt.place = document.getElementById('edit-event-place').value.trim();
+            evt.category = document.getElementById('edit-event-category').value;
+            evt.date = document.getElementById('edit-event-date').value.trim();
+            evt.maxPerBooking = parseInt(document.getElementById('edit-event-max-per-booking').value, 10) || 4;
+
+            const slotRows = document.querySelectorAll('#edit-slots-container > div');
+            const newSlots = [];
+            slotRows.forEach((row, idx) => {
+                const time = row.querySelector('.slot-time-input').value.trim();
+                const totalSeats = parseInt(row.querySelector('.slot-seats-input').value, 10) || 20;
+                if (time) {
+                    newSlots.push({ id: 's-' + Date.now() + '-' + idx, time, totalSeats });
+                }
+            });
+
+            evt.slots = newSlots;
+            saveEventsToStorage();
+            closeEditEventModal();
+            renderEvents();
+        }
+
+        function deleteEventBulletin(eventId) {
+            if (confirm("Are you sure you want to delete this bulletin and all its reservations?")) {
+                eventsData = eventsData.filter(e => e.id !== eventId);
+                saveEventsToStorage();
+                renderEvents();
             }
-            targetSlot.reservedCount += diff;
-            booking.name = newName;
-            booking.email = newEmail;
-            booking.seats = newSeats;
-        } else {
-            if (targetSlot.capacity > 0 && (targetSlot.reservedCount + newSeats) > targetSlot.capacity) {
-                showToast('Edit Failed', `Not enough capacity in destination time slot.`, 'error');
+        }
+
+        // Attendee List & CSV Export
+        function openAttendeesModal(eventId) {
+            currentEditingAttendeeEventId = eventId;
+            const evt = eventsData.find(e => e.id === eventId);
+            if (!evt) return;
+
+            document.getElementById('attendees-event-title').innerText = `${evt.title} Roster`;
+            const totalRes = evt.reservations ? evt.reservations.length : 0;
+            document.getElementById('attendees-count-summary').innerText = `${totalRes} guest reservation(s) recorded`;
+
+            const container = document.getElementById('attendees-list-container');
+            if (!evt.reservations || evt.reservations.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-xs text-slate-400">No reservations recorded yet for this bulletin.</div>`;
+            } else {
+                container.innerHTML = evt.reservations.map(r => {
+                    const slot = evt.slots.find(s => s.id === r.slotId);
+                    const timeLabel = slot ? slot.time : 'General Slot';
+                    return `
+                        <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs">
+                            <div class="space-y-0.5">
+                                <div class="font-bold text-slate-900">${r.name} <span class="text-blue-600 font-semibold">(${r.seats} seat${r.seats > 1 ? 's' : ''})</span></div>
+                                <div class="text-slate-500"><i class="fa-regular fa-envelope mr-1"></i>${r.email}</div>
+                                <div class="text-[10px] text-slate-400"><i class="fa-regular fa-clock mr-1"></i>${timeLabel} &bull; Booked ${r.timestamp}</div>
+                            </div>
+                            <button onclick="cancelGuestBooking('${evt.id}', '${r.id}')" class="text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition shrink-0">
+                                Cancel
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('attendees-modal').classList.remove('hidden');
+        }
+
+        function closeAttendeesModal() {
+            document.getElementById('attendees-modal').classList.add('hidden');
+            currentEditingAttendeeEventId = null;
+        }
+
+        function cancelGuestBooking(eventId, resId) {
+            const evt = eventsData.find(e => e.id === eventId);
+            if (!evt || !evt.reservations) return;
+            if (confirm("Cancel this guest reservation?")) {
+                evt.reservations = evt.reservations.filter(r => r.id !== resId);
+                saveEventsToStorage();
+                openAttendeesModal(eventId);
+                renderEvents();
+            }
+        }
+
+        function exportAttendeesCSV() {
+            if (!currentEditingAttendeeEventId) return;
+            const evt = eventsData.find(e => e.id === currentEditingAttendeeEventId);
+            if (!evt || !evt.reservations || evt.reservations.length === 0) {
+                alert("No attendees to export.");
                 return;
             }
-            oldSlot.reservedCount = Math.max(0, oldSlot.reservedCount - oldSeats);
-            oldSlot.reservations.splice(resIndex, 1);
-            targetSlot.reservedCount += newSeats;
-            if (!targetSlot.reservations) targetSlot.reservations = [];
-            targetSlot.reservations.unshift({
-                id: booking.id || 'res-' + Date.now(),
-                name: newName,
-                email: newEmail,
-                seats: newSeats,
-                timestamp: booking.timestamp
+
+            let csvContent = "data:text/csv;charset=utf-8,Guest Name,Email,Seats Reserved,Time Slot,Booking Date\n";
+            evt.reservations.forEach(r => {
+                const slot = evt.slots.find(s => s.id === r.slotId);
+                const timeStr = slot ? `"${slot.time}"` : '"N/A"';
+                csvContent += `"${r.name}","${r.email}",${r.seats},${timeStr},"${r.timestamp}"\n`;
             });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `${evt.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_attendees.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
-        saveEventsToStorage();
-        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
-        renderEvents();
-        updateGlobalStats();
-        viewAttendees(eventId);
-        closeEditReservationModal();
-        showToast('Booking Updated', `Updated reservation for ${newName}.`);
-    }
-
-    function deleteReservation(eventId, slotId, resIndex) {
-        const evt = window.events.find(e => e.id === eventId);
-        if (!evt) return;
-        const slot = evt.timeSlots.find(s => s.id === slotId);
-        if (!slot || !slot.reservations || !slot.reservations[resIndex]) return;
-        const res = slot.reservations[resIndex];
-        slot.reservedCount = Math.max(0, slot.reservedCount - res.seats);
-        slot.reservations.splice(resIndex, 1);
-        saveEventsToStorage();
-        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
-        renderEvents();
-        updateGlobalStats();
-        viewAttendees(eventId);
-        showToast('Booking Cancelled', `Removed booking for ${res.name}.`);
-    }
-
-    function filterCategory(cat) {
-        window.activeCategoryFilter = cat;
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.className = 'filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap';
-        });
-        const activeBtn = document.getElementById(`filter-${cat}`);
-        if (activeBtn) {
-            activeBtn.className = 'filter-btn active px-3.5 py-1.5 rounded-xl text-xs font-medium transition bg-slate-900 text-white whitespace-nowrap';
-        }
-        renderEvents();
-    }
-
-    function clearSearchFilters() {
-        document.getElementById('search-input').value = '';
-        filterCategory('all');
-    }
-
-    function updateGlobalStats() {
-        document.getElementById('stat-total-events').textContent = window.events.length;
-        let totalSlots = 0;
-        let totalReserved = 0;
-        window.events.forEach(e => {
-            totalSlots += e.timeSlots.length;
-            e.timeSlots.forEach(s => {
-                totalReserved += s.reservedCount || 0;
+        // Filtering & Sorting Tools
+        function filterCategory(cat) {
+            activeCategoryFilter = cat;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.className = "filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap";
             });
-        });
-        document.getElementById('stat-total-slots').textContent = totalSlots;
-        document.getElementById('stat-total-reservations').textContent = totalReserved;
-    }
 
-    function showToast(title, message, type = 'success') {
-        const toast = document.getElementById('toast');
-        const toastTitle = document.getElementById('toast-title');
-        const toastMsg = document.getElementById('toast-message');
-        const icon = document.getElementById('toast-icon');
-        const iconWrapper = document.getElementById('toast-icon-wrapper');
-        toastTitle.textContent = title;
-        toastMsg.textContent = message;
-        if (type === 'error') {
-            icon.className = 'fa-solid fa-circle-exclamation';
-            iconWrapper.className = 'w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center';
-        } else {
-            icon.className = 'fa-solid fa-circle-check';
-            iconWrapper.className = 'w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center';
+            const activeBtn = document.getElementById(`filter-${cat}`);
+            if (activeBtn) {
+                activeBtn.className = "filter-btn active px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-slate-900 text-white whitespace-nowrap";
+            }
+            renderEvents();
         }
-        toast.classList.remove('translate-y-20', 'opacity-0');
-        toast.classList.add('translate-y-0', 'opacity-100');
-        setTimeout(() => {
-            toast.classList.remove('translate-y-0', 'opacity-100');
-            toast.classList.add('translate-y-20', 'opacity-0');
-        }, 3500);
-    }
 
-    function escapeHTML(str) {
-        if (!str) return '';
-        return str.replace(/[&<>'"]/g, 
-            tag => ({ '&': '&', '<': '<', '>': '>', "'": ''', '"': '"' }[tag] || tag)
-        );
-    }
-</script>
+        function clearSearchFilters() {
+            document.getElementById('search-input').value = '';
+            filterCategory('all');
+        }
 
+        function sortEventsByDate() {
+            eventsData.reverse();
+            saveEventsToStorage();
+            renderEvents();
+        }
 
-
+        function resetDataToDefaults() {
+            if (confirm("Reset all bulletins and reservations to default demo state?")) {
+                eventsData = DEFAULT_EVENTS;
+                saveEventsToStorage();
+                renderEvents();
+            }
+        }
+    </script>
+</body>
+</html>
