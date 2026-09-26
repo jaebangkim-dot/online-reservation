@@ -79,7 +79,7 @@
         <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
             <button onclick="filterCategory('all')" id="filter-all" class="filter-btn active px-3.5 py-1.5 rounded-xl text-xs font-medium transition bg-slate-900 text-white whitespace-nowrap">All Events</button>
             <button onclick="filterCategory('available')" id="filter-available" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Seats Available</button>
-            <button onclick="filterCategory('limited')" id="filter-limited" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Filling Fast (&lt; 25%)</button>
+            <button onclick="filterCategory('limited')" id="filter-limited" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Filling Fast (< 25%)</button>
         </div>
     </div>
 
@@ -179,9 +179,9 @@
                 <i class="fa-brands fa-google"></i>
             </div>
             <div>
-                <h4 class="font-bold text-slate-800 text-base">Google Account Required</h4>
+                <h4 class="font-bold text-slate-800 text-base">Authorized Google Account Required</h4>
                 <p class="text-slate-500 text-xs mt-1.5 leading-relaxed">
-                    To access admin controls and write permissions, please sign in with an authorized Google Account.
+                    To access admin controls, please sign in with an approved Google Account (<span class="font-semibold text-slate-700">jaebang.kim@stpaulhanoi.com</span>).
                 </p>
             </div>
 
@@ -436,10 +436,8 @@
     import { 
         getFirestore, 
         doc, 
-        collection, 
         onSnapshot, 
-        setDoc, 
-        deleteDoc 
+        setDoc
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -452,7 +450,11 @@
         measurementId: "G-3NEHFY0876"
     };
 
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'eventpulse-bulletin-app';
+    // Allowed Google Admin Emails matching Firestore Rules
+    const ALLOWED_ADMIN_EMAILS = [
+        "jaebang.kim@stpaulhanoi.com"
+    ];
+
     let db = null;
     let auth = null;
     window.isFirebaseActive = false;
@@ -472,17 +474,30 @@
                 const avatar = document.getElementById('admin-avatar');
 
                 if (user && !user.isAnonymous && user.email) {
-                    window.isAdminAuthenticated = true;
-                    if (emailText) emailText.textContent = user.email;
-                    if (avatar) {
-                        if (user.photoURL) {
-                            avatar.src = user.photoURL;
-                            avatar.classList.remove('hidden');
-                        } else {
-                            avatar.classList.add('hidden');
+                    const userEmailLower = user.email.toLowerCase();
+                    const isApprovedAdmin = user.emailVerified && ALLOWED_ADMIN_EMAILS.includes(userEmailLower);
+
+                    if (isApprovedAdmin) {
+                        window.isAdminAuthenticated = true;
+                        if (emailText) emailText.textContent = user.email;
+                        if (avatar) {
+                            if (user.photoURL) {
+                                avatar.src = user.photoURL;
+                                avatar.classList.remove('hidden');
+                            } else {
+                                avatar.classList.add('hidden');
+                            }
                         }
+                        if (badge) badge.classList.remove('hidden');
+                    } else {
+                        // Unauthorized Google account
+                        window.isAdminAuthenticated = false;
+                        if (badge) badge.classList.add('hidden');
+                        if (window.currentRole === 'admin') {
+                            window.setRole('guest');
+                        }
+                        window.showToast('Access Denied', `The account (${user.email}) is not authorized for Admin write permissions.`, 'error');
                     }
-                    if (badge) badge.classList.remove('hidden');
                 } else {
                     window.isAdminAuthenticated = false;
                     if (badge) badge.classList.add('hidden');
@@ -500,18 +515,20 @@
 
             window.isFirebaseActive = true;
             console.log("Connected to Firebase Realtime Database.");
-            const eventsRef = collection(db, 'artifacts', appId, 'public', 'data', 'events');
+
+            // Document aligned with Firestore Security Rules path:
+            // /artifacts/ms-house-hub/public/data/houseCup/events
+            const eventsDocRef = doc(db, 'artifacts', 'ms-house-hub', 'public', 'data', 'houseCup', 'events');
             
-            onSnapshot(eventsRef, (snapshot) => {
-                const realtimeEvents = [];
-                snapshot.forEach((docSnap) => {
-                    realtimeEvents.push({ id: docSnap.id, ...docSnap.data() });
-                });
-                realtimeEvents.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-                window.events = realtimeEvents;
-                window.saveEventsToStorage();
-                window.renderEvents();
-                window.updateGlobalStats();
+            onSnapshot(eventsDocRef, (docSnap) => {
+                if (docSnap.exists() && docSnap.data().items) {
+                    const realtimeEvents = docSnap.data().items || [];
+                    realtimeEvents.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                    window.events = realtimeEvents;
+                    window.saveEventsToStorage();
+                    window.renderEvents();
+                    window.updateGlobalStats();
+                }
             }, (error) => {
                 console.warn("Firestore snapshot error, defaulting to local storage mode:", error);
             });
@@ -544,10 +561,19 @@
             const user = result.user;
 
             if (user && user.email) {
-                window.isAdminAuthenticated = true;
-                window.closeAdminLoginModal();
-                window.setRole('admin');
-                window.showToast('Welcome Admin', `Signed in as ${user.email}`);
+                const emailLower = user.email.toLowerCase();
+                if (user.emailVerified && ALLOWED_ADMIN_EMAILS.includes(emailLower)) {
+                    window.isAdminAuthenticated = true;
+                    window.closeAdminLoginModal();
+                    window.setRole('admin');
+                    window.showToast('Welcome Admin', `Signed in as ${user.email}`);
+                } else {
+                    window.isAdminAuthenticated = false;
+                    if (errorElement && errorText) {
+                        errorText.textContent = `Access Denied: ${user.email} is not in the approved admin list.`;
+                        errorElement.classList.remove('hidden');
+                    }
+                }
             }
         } catch (err) {
             console.error("Google Sign-In Error:", err);
@@ -575,23 +601,17 @@
         }
     };
 
-    window.syncEventToFirebase = async function(eventObj) {
+    // Sync complete events array to Firestore path match: /artifacts/ms-house-hub/public/data/houseCup/events
+    window.syncAllEventsToFirebase = async function() {
         if (!window.isFirebaseActive || !db) return;
         try {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', eventObj.id);
-            await setDoc(docRef, eventObj);
+            const eventsDocRef = doc(db, 'artifacts', 'ms-house-hub', 'public', 'data', 'houseCup', 'events');
+            await setDoc(eventsDocRef, {
+                items: window.events,
+                lastUpdated: new Date().toISOString()
+            });
         } catch (err) {
-            console.error("Failed to sync event to Firebase:", err);
-        }
-    };
-
-    window.removeEventFromFirebase = async function(eventId) {
-        if (!window.isFirebaseActive || !db) return;
-        try {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', eventId);
-            await deleteDoc(docRef);
-        } catch (err) {
-            console.error("Failed to delete event from Firebase:", err);
+            console.error("Failed to sync events to Firebase:", err);
         }
     };
 
@@ -641,15 +661,9 @@
     }
 
     function resetDataToDefaults() {
-        const oldEvents = [...window.events];
         window.events = [];
         saveEventsToStorage();
-        
-        if (window.isFirebaseActive) {
-            oldEvents.forEach(evt => {
-                if (window.removeEventFromFirebase) window.removeEventFromFirebase(evt.id);
-            });
-        }
+        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
         renderEvents();
         updateGlobalStats();
         showToast('Data Reset', 'All bulletins have been cleared.');
@@ -710,9 +724,9 @@
         }
         window.events.forEach((evt, idx) => {
             evt.order = idx;
-            if (window.syncEventToFirebase) window.syncEventToFirebase(evt);
         });
         saveEventsToStorage();
+        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
         renderEvents();
         showToast('Order Updated', 'Bulletin order synced for Guest View.');
     }
@@ -726,9 +740,9 @@
         });
         window.events.forEach((evt, idx) => {
             evt.order = idx;
-            if (window.syncEventToFirebase) window.syncEventToFirebase(evt);
         });
         saveEventsToStorage();
+        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
         renderEvents();
         showToast('Bulletins Sorted', 'Mini bulletins arranged in chronological date order.');
     }
@@ -1052,7 +1066,7 @@
             timestamp: 'Just now'
         });
         saveEventsToStorage();
-        if (window.syncEventToFirebase) window.syncEventToFirebase(evt);
+        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
         renderEvents();
         updateGlobalStats();
         closeReservationModal();
@@ -1149,9 +1163,9 @@
         
         window.events.forEach((evt, idx) => {
             evt.order = idx;
-            if (window.syncEventToFirebase) window.syncEventToFirebase(evt);
         });
         saveEventsToStorage();
+        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
         renderEvents();
         updateGlobalStats();
         closeCreateModal();
@@ -1220,7 +1234,7 @@
         evt.maxSeatsPerBooking = maxVal ? parseInt(maxVal) : 0;
         evt.timeSlots = updatedTimeSlots;
         saveEventsToStorage();
-        if (window.syncEventToFirebase) window.syncEventToFirebase(evt);
+        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
         renderEvents();
         updateGlobalStats();
         closeEditEventModal();
@@ -1234,10 +1248,9 @@
         
         window.events.forEach((item, idx) => {
             item.order = idx;
-            if (window.syncEventToFirebase) window.syncEventToFirebase(item);
         });
         saveEventsToStorage();
-        if (window.removeEventFromFirebase) window.removeEventFromFirebase(id);
+        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
         renderEvents();
         updateGlobalStats();
         showToast('Deleted', `Bulletin "${evt.title}" removed.`);
@@ -1399,7 +1412,7 @@
         }
 
         saveEventsToStorage();
-        if (window.syncEventToFirebase) window.syncEventToFirebase(evt);
+        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
         renderEvents();
         updateGlobalStats();
         viewAttendees(eventId);
@@ -1416,7 +1429,7 @@
         slot.reservedCount = Math.max(0, slot.reservedCount - res.seats);
         slot.reservations.splice(resIndex, 1);
         saveEventsToStorage();
-        if (window.syncEventToFirebase) window.syncEventToFirebase(evt);
+        if (window.syncAllEventsToFirebase) window.syncAllEventsToFirebase();
         renderEvents();
         updateGlobalStats();
         viewAttendees(eventId);
@@ -1480,7 +1493,10 @@
     function escapeHTML(str) {
         if (!str) return '';
         return str.replace(/[&<>'"]/g, 
-            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            tag => ({ '&': '&', '<': '<', '>': '>', "'": ''', '"': '"' }[tag] || tag)
         );
     }
 </script>
+
+
+
