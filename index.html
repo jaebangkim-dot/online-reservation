@@ -61,6 +61,14 @@
             from { transform: translateY(-20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+        .dragging-card {
+            opacity: 0.4;
+            transform: scale(0.98);
+        }
+        .drag-over-card {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
@@ -155,9 +163,9 @@
                 <div>
                     <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
                         <i class="fa-solid fa-sliders text-indigo-600"></i>
-                        Admin Controls & Quick Tools
+                        Admin Controls & Live Manual Reordering
                     </h2>
-                    <p class="text-slate-500 text-xs mt-0.5">Manage event bulletins, export attendee lists, change password, or reset demo database.</p>
+                    <p class="text-slate-500 text-xs mt-0.5">Drag card handles or use the <i class="fa-solid fa-arrow-up text-indigo-600"></i> <i class="fa-solid fa-arrow-down text-indigo-600"></i> arrows on cards to reorder bulletins live across all user devices in real-time.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <button onclick="openChangePasswordModal()" class="text-xs font-semibold text-indigo-700 hover:text-indigo-800 border border-indigo-200 hover:border-indigo-300 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
@@ -166,7 +174,7 @@
                     </button>
                     <button onclick="sortEventsByDate()" class="text-xs font-semibold text-blue-700 hover:text-blue-800 border border-blue-200 hover:border-blue-300 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
                         <i class="fa-solid fa-arrow-down-short-wide text-[10px]"></i>
-                        <span>Sort Chronologically</span>
+                        <span>Reset Chronological Order</span>
                     </button>
                     <button onclick="promptResetDataToDefaults()" class="text-xs font-semibold text-rose-600 hover:text-rose-700 border border-slate-200 hover:border-rose-200 bg-white hover:bg-rose-50 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
                         <i class="fa-solid fa-rotate-right text-[10px]"></i>
@@ -546,7 +554,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global State & Firebase Initialization
         window.isAdminLoggedIn = false;
@@ -555,13 +563,15 @@
         window.activeCategoryFilter = 'all';
         window.currentEditingAttendeeEventId = null;
         window.eventsData = [];
+        let draggedCardId = null;
 
         const DEFAULT_PASS_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
 
-        // Default Data Seed
+        // Default Data Seed with Order Attribute
         const DEFAULT_EVENTS = [
             {
                 id: 'evt-101',
+                order: 0,
                 title: 'Tech & AI Innovation Summit',
                 desc: 'Explore cutting-edge developments in artificial intelligence, robotics, and interactive tech demonstrations.',
                 place: 'Main Auditorium & Exhibition Center',
@@ -580,6 +590,7 @@
             },
             {
                 id: 'evt-102',
+                order: 1,
                 title: 'Autumn Symphony & Acoustic Night',
                 desc: 'An enchanting evening of classical orchestral performances and acoustic solos by local talent.',
                 place: 'Grand Performing Arts Hall',
@@ -596,6 +607,7 @@
             },
             {
                 id: 'evt-103',
+                order: 2,
                 title: 'Mindfulness & Wellness Retreat',
                 desc: 'Interactive guided meditation sessions, gentle yoga practices, and stress management strategies.',
                 place: 'Community Recreation Center Room 3',
@@ -615,13 +627,13 @@
             ? JSON.parse(__firebase_config)
             : {
                 apiKey: "AIzaSyDfGs8InTB4S5qvxohtMojrfpRV-swtcVM",
-  authDomain: "enhanced-security-event-system.firebaseapp.com",
-  databaseURL: "https://enhanced-security-event-system-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "enhanced-security-event-system",
-  storageBucket: "enhanced-security-event-system.firebasestorage.app",
-  messagingSenderId: "295078798873",
-  appId: "1:295078798873:web:ef32447edff974ae48ac88",
-  measurementId: "G-E33WXQCLRR"
+                authDomain: "enhanced-security-event-system.firebaseapp.com",
+                databaseURL: "https://enhanced-security-event-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+                projectId: "enhanced-security-event-system",
+                storageBucket: "enhanced-security-event-system.firebasestorage.app",
+                messagingSenderId: "295078798873",
+                appId: "1:295078798873:web:ef32447edff974ae48ac88",
+                measurementId: "G-E33WXQCLRR"
             };
 
         const app = initializeApp(firebaseConfig);
@@ -727,10 +739,13 @@
                     return;
                 }
 
-                window.eventsData = snapshot.docs.map(docSnap => ({
+                const rawData = snapshot.docs.map(docSnap => ({
                     id: docSnap.id,
                     ...docSnap.data()
                 }));
+
+                // Sort globally by 'order' property so real-time order matches across all devices
+                window.eventsData = rawData.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
                 renderEvents();
                 updateHeaderStats();
@@ -804,14 +819,50 @@
             grid.classList.remove('hidden');
             emptyState.classList.add('hidden');
 
-            filtered.forEach(evt => {
-                grid.appendChild(createEventCardElement(evt));
+            filtered.forEach((evt, displayIndex) => {
+                grid.appendChild(createEventCardElement(evt, displayIndex, filtered.length));
             });
         };
 
-        function createEventCardElement(evt) {
+        function createEventCardElement(evt, displayIndex, totalCount) {
             const card = document.createElement('div');
-            card.className = "bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition duration-200 overflow-hidden flex flex-col justify-between";
+            card.id = `card-${evt.id}`;
+            card.className = "bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition duration-200 overflow-hidden flex flex-col justify-between relative group";
+
+            if (window.isAdminLoggedIn) {
+                card.draggable = true;
+                
+                card.addEventListener('dragstart', (e) => {
+                    draggedCardId = evt.id;
+                    card.classList.add('dragging-card');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', evt.id);
+                });
+
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging-card');
+                    document.querySelectorAll('.drag-over-card').forEach(el => el.classList.remove('drag-over-card'));
+                });
+
+                card.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (draggedCardId !== evt.id) {
+                        card.classList.add('drag-over-card');
+                    }
+                });
+
+                card.addEventListener('dragleave', () => {
+                    card.classList.remove('drag-over-card');
+                });
+
+                card.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    card.classList.remove('drag-over-card');
+                    if (draggedCardId && draggedCardId !== evt.id) {
+                        handleDragAndDropReorder(draggedCardId, evt.id);
+                    }
+                });
+            }
 
             let totalCapacity = 0;
             let totalBooked = 0;
@@ -845,8 +896,27 @@
                 `;
             }).join('');
 
+            // Admin reorder toolbar
+            const adminReorderToolbar = window.isAdminLoggedIn ? `
+                <div class="bg-indigo-900 text-indigo-100 px-4 py-2 flex items-center justify-between text-xs font-semibold">
+                    <div class="flex items-center gap-2 cursor-grab active:cursor-grabbing" title="Drag to reorder bulletin">
+                        <i class="fa-solid fa-grip-vertical text-indigo-300"></i>
+                        <span class="text-[11px] font-medium tracking-wide uppercase text-indigo-200">Reorder Bulletin</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="moveEventPosition('${evt.id}', 'up')" ${displayIndex === 0 ? 'disabled class="opacity-30 cursor-not-allowed px-2 py-1 bg-indigo-950 rounded"' : 'class="px-2 py-1 bg-indigo-800 hover:bg-indigo-700 active:bg-indigo-600 rounded transition text-white"'} title="Move Up">
+                            <i class="fa-solid fa-arrow-up text-xs"></i>
+                        </button>
+                        <button onclick="moveEventPosition('${evt.id}', 'down')" ${displayIndex === totalCount - 1 ? 'disabled class="opacity-30 cursor-not-allowed px-2 py-1 bg-indigo-950 rounded"' : 'class="px-2 py-1 bg-indigo-800 hover:bg-indigo-700 active:bg-indigo-600 rounded transition text-white"'} title="Move Down">
+                            <i class="fa-solid fa-arrow-down text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            ` : '';
+
             card.innerHTML = `
                 <div>
+                    ${adminReorderToolbar}
                     <div class="p-5 pb-3">
                         <div class="flex items-center justify-between gap-2 mb-2">
                             <span class="bg-blue-50 text-blue-700 border border-blue-200/80 text-[10px] font-bold px-2.5 py-0.5 rounded-lg uppercase tracking-wider">
@@ -898,6 +968,52 @@
             `;
 
             return card;
+        }
+
+        // Real-Time Manual Reordering Logic
+        window.moveEventPosition = async function(eventId, direction) {
+            const sortedList = [...window.eventsData].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+            const currentIndex = sortedList.findIndex(e => e.id === eventId);
+            if (currentIndex === -1) return;
+
+            const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+            if (targetIndex < 0 || targetIndex >= sortedList.length) return;
+
+            // Swap positions in sorted array
+            const [movedItem] = sortedList.splice(currentIndex, 1);
+            sortedList.splice(targetIndex, 0, movedItem);
+
+            await persistNewOrderToCloud(sortedList);
+        };
+
+        window.handleDragAndDropReorder = async function(sourceId, targetId) {
+            const sortedList = [...window.eventsData].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+            const sourceIndex = sortedList.findIndex(e => e.id === sourceId);
+            const targetIndex = sortedList.findIndex(e => e.id === targetId);
+
+            if (sourceIndex === -1 || targetIndex === -1) return;
+
+            const [draggedItem] = sortedList.splice(sourceIndex, 1);
+            sortedList.splice(targetIndex, 0, draggedItem);
+
+            await persistNewOrderToCloud(sortedList);
+        };
+
+        async function persistNewOrderToCloud(orderedList) {
+            try {
+                const batch = writeBatch(db);
+                orderedList.forEach((evt, idx) => {
+                    evt.order = idx;
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', evt.id);
+                    batch.update(docRef, { order: idx });
+                });
+
+                await batch.commit();
+                showToast("Bulletin order updated live across all devices!", "success");
+            } catch (err) {
+                console.error("Failed persisting order to cloud:", err);
+                showToast("Failed to update bulletin order.", "error");
+            }
         }
 
         // Slot Helper Utilities
@@ -986,8 +1102,10 @@
             });
 
             const newEventId = 'evt-' + Date.now();
+            const nextOrder = (window.eventsData || []).length;
             const newEvent = {
                 id: newEventId,
+                order: nextOrder,
                 title, desc, place, category, date, maxPerBooking,
                 slots,
                 reservations: []
@@ -1504,9 +1622,9 @@
             filterCategory('all');
         };
 
-        window.sortEventsByDate = function() {
-            window.eventsData.reverse();
-            renderEvents();
+        window.sortEventsByDate = async function() {
+            const sortedByOrder = [...window.eventsData].reverse();
+            await persistNewOrderToCloud(sortedByOrder);
         };
     </script>
 </body>
